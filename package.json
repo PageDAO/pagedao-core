@@ -1,0 +1,23 @@
+{
+  "name": "functions",
+  "version": "1.0.0",
+  "main": "frame.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.8.2",
+    "canvas": "^3.1.0",
+    "ethers": "^6.13.5"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^3.0.1",
+    "@types/node": "^22.13.10",
+    "netlify-lambda": "^2.0.16",
+    "typescript": "^5.8.2"
+  }
+}
