@@ -12,17 +12,17 @@ exports.handler = async function(event) {
     const chains = ['ethereum', 'optimism', 'base', 'osmosis'];
     const avgPrice = chains.reduce((sum, chain) => sum + priceData[chain], 0) / chains.length;
     
-    // Create SVG image directly
+    // Create a simpler SVG without fancy fonts
     const svg = `
       <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
         <rect width="1200" height="628" fill="#1e2d3a"/>
-        <text x="100" y="100" font-family="Arial" font-size="48" fill="white" font-weight="bold">$PAGE Token Prices</text>
-        <text x="100" y="180" font-family="Arial" font-size="36" fill="white">Ethereum: ${priceData.ethereum.toFixed(6)}</text>
-        <text x="100" y="240" font-family="Arial" font-size="36" fill="white">Optimism: ${priceData.optimism.toFixed(6)}</text>
-        <text x="100" y="300" font-family="Arial" font-size="36" fill="white">Base: ${priceData.base.toFixed(6)}</text>
-        <text x="100" y="360" font-family="Arial" font-size="36" fill="white">Osmosis: ${priceData.osmosis.toFixed(6)}</text>
-        <text x="100" y="440" font-family="Arial" font-size="40" fill="white" font-weight="bold">Average: ${avgPrice.toFixed(6)}</text>
-        <text x="100" y="580" font-family="Arial" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
+        <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE Token Prices</text>
+        <text x="100" y="180" font-size="36" fill="white">Ethereum: ${priceData.ethereum.toFixed(6)}</text>
+        <text x="100" y="240" font-size="36" fill="white">Optimism: ${priceData.optimism.toFixed(6)}</text>
+        <text x="100" y="300" font-size="36" fill="white">Base: ${priceData.base.toFixed(6)}</text>
+        <text x="100" y="360" font-size="36" fill="white">Osmosis: ${priceData.osmosis.toFixed(6)}</text>
+        <text x="100" y="440" font-size="40" fill="white" font-weight="bold">Average: ${avgPrice.toFixed(6)}</text>
+        <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
       </svg>
     `;
     
@@ -44,9 +44,8 @@ exports.handler = async function(event) {
     const errorSvg = `
       <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
         <rect width="1200" height="628" fill="#5c1e1e"/>
-        <text x="100" y="100" font-family="Arial" font-size="48" fill="white" font-weight="bold">Error Fetching $PAGE Prices</text>
-        <text x="100" y="180" font-family="Arial" font-size="36" fill="white">Please try again later</text>
-        <text x="100" y="240" font-family="Arial" font-size="24" fill="#dddddd">${error.message}</text>
+        <text x="100" y="100" font-size="48" fill="white" font-weight="bold">Error Fetching $PAGE Prices</text>
+        <text x="100" y="180" font-size="36" fill="white">Please try again later</text>
       </svg>
     `;
     
