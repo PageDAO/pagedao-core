@@ -12,6 +12,12 @@
   to = "/.netlify/functions/image"
   status = 200
 
+[[redirects]]
+  from = "/trade"
+  to = "/.netlify/functions/trade"
+  status = 200
+
+
 [functions]
   node_bundler = "esbuild"
 
