@@ -1,0 +1,2 @@
+# public/_redirects
+/    /.netlify/functions/frame    200
