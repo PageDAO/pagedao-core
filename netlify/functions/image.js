@@ -1,136 +1,116 @@
-const { createCanvas } = require('canvas');
+const axios = require('axios');
 const { fetchPagePrices } = require('./utils/tokenServices');
 
 exports.handler = async function(event) {
   try {
     // Get the selected chain from query parameters
-    const { chain = 'all', error } = event.queryStringParameters || {};
+    const { chain = 'all' } = event.queryStringParameters || {};
     
-    // Fetch latest prices directly from the service
+    // Fetch latest prices
     const priceData = await fetchPagePrices();
     
-    // Create canvas with proper aspect ratio for Farcaster (1.91:1)
-    const width = 1200;
-    const height = 628;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-    
-    // Fill background - use a simple solid color
-    ctx.fillStyle = '#1e2d3a';
-    ctx.fillRect(0, 0, width, height);
-    
-    // Simple header text with system font
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px Arial';
-    ctx.fillText('$PAGE Token Prices', 60, 80);
-    
-    // Draw timestamp
-    const timestamp = new Date().toLocaleString();
-    ctx.font = '24px Arial';
-    ctx.fillText(`Last Updated: ${timestamp}`, 60, height - 40);
-    
-    // Determine which prices to show
+    // Create text lines for the image
+    let textLines = [];
     if (chain === 'all') {
-      // Show all chains
-      drawAllChainPrices(ctx, priceData);
+      textLines = [
+        `Ethereum: ${priceData.ethereum.toFixed(6)}`,
+        `Optimism: ${priceData.optimism.toFixed(6)}`,
+        `Base: ${priceData.base.toFixed(6)}`,
+        `Osmosis: ${priceData.osmosis.toFixed(6)}`
+      ];
     } else {
-      // Show specific chain
-      drawSingleChainPrice(ctx, chain, priceData[chain]);
+      textLines = [`${chain.charAt(0).toUpperCase() + chain.slice(1)}: ${priceData[chain].toFixed(6)}`];
     }
     
-    // Convert to PNG
-    const buffer = canvas.toBuffer('image/png');
+    // Create a simple HTML image with the text
+    const html = `
+      <html>
+        <head>
+          <style>
+            body {
+              background-color: #1e2d3a;
+              color: white;
+              font-family: Arial, sans-serif;
+              padding: 40px;
+              width: 1200px;
+              height: 628px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+            h1 {
+              font-size: 48px;
+              margin-bottom: 40px;
+            }
+            p {
+              font-size: 36px;
+              margin: 10px 0;
+            }
+            .timestamp {
+              position: absolute;
+              bottom: 20px;
+              font-size: 18px;
+              color: #aaa;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>$PAGE Token Prices</h1>
+          ${textLines.map(line => `<p>${line}</p>`).join('')}
+          <div class="timestamp">Last updated: ${new Date().toLocaleString()}</div>
+        </body>
+      </html>
+    `;
     
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Access-Control-Allow-Origin': '*'
       },
-      body: buffer.toString('base64'),
-      isBase64Encoded: true
+      body: html
     };
   } catch (error) {
-    console.error('Error generating image:', error);
-    
-    // Create a simple error image
-    const width = 1200;
-    const height = 628;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-    
-    ctx.fillStyle = '#5c1e1e';
-    ctx.fillRect(0, 0, width, height);
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px Arial';
-    ctx.fillText('Error Fetching $PAGE Prices', 60, 80);
-    
-    const buffer = canvas.toBuffer('image/png');
+    console.error('Error:', error);
     
     return {
       statusCode: 500,
       headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Access-Control-Allow-Origin': '*'
       },
-      body: buffer.toString('base64'),
-      isBase64Encoded: true
+      body: `
+        <html>
+          <head>
+            <style>
+              body {
+                background-color: #5c1e1e;
+                color: white;
+                font-family: Arial, sans-serif;
+                padding: 40px;
+                width: 1200px;
+                height: 628px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+              }
+              h1 {
+                font-size: 48px;
+                margin-bottom: 20px;
+              }
+              p {
+                font-size: 24px;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Error Fetching $PAGE Prices</h1>
+            <p>Please try again later</p>
+          </body>
+        </html>
+      `
     };
   }
 };
-
-// Helper function to draw all chain prices - simplified version
-function drawAllChainPrices(ctx, priceData) {
-  const chains = ['ethereum', 'optimism', 'base', 'osmosis'];
-  const chainLabels = {
-    ethereum: 'Ethereum',
-    optimism: 'Optimism',
-    base: 'Base',
-    osmosis: 'Osmosis'
-  };
-  
-  let y = 160;
-  const spacing = 80;
-  
-  chains.forEach(chain => {
-    const price = priceData[chain];
-    ctx.font = '36px Arial';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(`${chainLabels[chain]}: ${price ? price.toFixed(6) : 'Not available'}`, 60, y);
-    y += spacing;
-  });
-  
-  // Calculate average price
-  const chainPrices = chains.map(chain => priceData[chain])
-    .filter(price => typeof price === 'number' && !isNaN(price) && price !== null);
-  
-  if (chainPrices.length > 0) {
-    const avgPrice = chainPrices.reduce((sum, price) => sum + price, 0) / chainPrices.length;
-    ctx.font = 'bold 40px Arial';
-    ctx.fillText(`Average Price: ${avgPrice.toFixed(6)}`, 60, y + 20);
-  }
-}
-
-// Helper function to draw a single chain price - simplified version
-function drawSingleChainPrice(ctx, chain, price) {
-  const chainLabels = {
-    ethereum: 'Ethereum',
-    optimism: 'Optimism',
-    base: 'Base',
-    osmosis: 'Osmosis'
-  };
-  
-  // Chain name
-  ctx.font = 'bold 56px Arial';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(`${chainLabels[chain] || chain} $PAGE Price`, 60, 160);
-  
-  // Price
-  ctx.font = 'bold 96px Arial';
-  ctx.fillText(price ? `${price.toFixed(6)}` : 'Not available', 60, 280);
-  
-  // Context
-  ctx.font = '32px Arial';
-  ctx.fillText('Based on liquidity pool data', 60, 350);
-}

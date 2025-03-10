@@ -28,7 +28,7 @@ exports.handler = async function(event) {
         <html>
         <head>
           <meta property="fc:frame" content="vNext" />
-          <meta property="fc:frame:image" content="${host}/.netlify/functions/image?chain=${chain}&t=${timestamp}" />
+          <meta property="fc:frame:image" content="${host}/.netlify/functions/image?chain=${chain}&t=${timestamp}" type="text/html" />
           <meta property="fc:frame:button:1" content="${getButtonLabel('ethereum')}" />
           <meta property="fc:frame:button:2" content="${getButtonLabel('optimism')}" />
           <meta property="fc:frame:button:3" content="${getButtonLabel('base')}" />
