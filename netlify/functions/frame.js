@@ -2,23 +2,15 @@ const { fetchPagePrices } = require('./utils/tokenServices');
 
 exports.handler = async function(event) {
   try {
-    // Get selected chain from query parameters (default to showing all)
-    const { chain = 'all' } = event.queryStringParameters || {};
-    
-    // Fetch the latest price data
+    // Fetch latest prices
     const priceData = await fetchPagePrices();
     
-    // Generate button labels
-    const getButtonLabel = (chainName) => {
-      const formattedName = chainName.charAt(0).toUpperCase() + chainName.slice(1);
-      return formattedName; // Just use the chain name without price
-    };
+    // Calculate average
+    const chains = ['ethereum', 'optimism', 'base', 'osmosis'];
+    const avgPrice = chains.reduce((sum, chain) => sum + priceData[chain], 0) / chains.length;
     
-    // Timestamp for cache busting the image
-    const timestamp = new Date().getTime();
-    
-    // Get full host URL with proper protocol
-    const host = process.env.URL || 'https://your-site.netlify.app';
+    // Create minimal 1x1 transparent PNG as base64
+    const transparentPixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
     
     return {
       statusCode: 200,
@@ -28,17 +20,19 @@ exports.handler = async function(event) {
         <html>
         <head>
           <meta property="fc:frame" content="vNext" />
-          <meta property="fc:frame:image" content="${host}/.netlify/functions/image?chain=${chain}&t=${timestamp}" type="text/html" />
-          <meta property="fc:frame:button:1" content="${getButtonLabel('ethereum')}" />
-          <meta property="fc:frame:button:2" content="${getButtonLabel('optimism')}" />
-          <meta property="fc:frame:button:3" content="${getButtonLabel('base')}" />
-          <meta property="fc:frame:button:4" content="${getButtonLabel('osmosis')}" />
-          <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+          <meta property="fc:frame:image" content="data:image/png;base64,${transparentPixel}" />
+          <meta property="fc:frame:image:aspect_ratio" content="1.91:1" />
+          <meta property="og:image" content="https://pagetokenprices.netlify.app/.netlify/functions/image?t=${Date.now()}" />
+          <meta property="fc:frame:button:1" content="Ethereum: ${priceData.ethereum.toFixed(6)}" />
+          <meta property="fc:frame:button:2" content="Optimism: ${priceData.optimism.toFixed(6)}" />
+          <meta property="fc:frame:button:3" content="Base: ${priceData.base.toFixed(6)}" />
+          <meta property="fc:frame:button:4" content="Avg: ${avgPrice.toFixed(6)}" />
+          <meta property="fc:frame:post_url" content="${process.env.URL || 'https://pagetokenprices.netlify.app'}/.netlify/functions/frame" />
           <title>PAGE Token Prices</title>
         </head>
         <body>
           <h1>PAGE Token Prices</h1>
-          <p>This is a Farcaster Frame showing current PAGE token prices.</p>
+          <p>Current prices: ETH ${priceData.ethereum.toFixed(6)}, OPT ${priceData.optimism.toFixed(6)}, BASE ${priceData.base.toFixed(6)}, OSMO ${priceData.osmosis.toFixed(6)}</p>
         </body>
         </html>
       `
@@ -53,9 +47,8 @@ exports.handler = async function(event) {
         <html>
         <head>
           <meta property="fc:frame" content="vNext" />
-          <meta property="fc:frame:image" content="${process.env.URL || 'https://your-site.netlify.app'}/.netlify/functions/image?error=true" />
+          <meta property="fc:frame:image" content="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" />
           <meta property="fc:frame:button:1" content="Try Again" />
-          <meta property="fc:frame:post_url" content="${process.env.URL || 'https://your-site.netlify.app'}/.netlify/functions/frame" />
           <title>Error</title>
         </head>
         <body>
