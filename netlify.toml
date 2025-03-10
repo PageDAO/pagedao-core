@@ -1,9 +1,6 @@
 [build]
-  functions = "netlify/functions"
   publish = "public"
-
-[functions]
-  node_bundler = "esbuild"
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/frame"
@@ -14,6 +11,9 @@
   from = "/image"
   to = "/.netlify/functions/image"
   status = 200
+
+[functions]
+  node_bundler = "esbuild"
 
 [dev]
   framework = "#static"
