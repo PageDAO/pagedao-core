@@ -1,18 +1,21 @@
 const { fetchPagePrices } = require('./utils/tokenServices');
 
 exports.handler = async function(event) {
+  console.log('Image request received from:', event.headers['user-agent']);
+  
   try {
-    // Get the selected chain
-    const { chain = 'all' } = event.queryStringParameters || {};
-    
+    console.log('About to fetch PAGE prices...');
     // Fetch latest prices
     const priceData = await fetchPagePrices();
+    console.log('Successfully fetched prices:', priceData);
     
-    // Calculate average price (only from the four chains)
+    // Calculate average price
     const chains = ['ethereum', 'optimism', 'base', 'osmosis'];
     const avgPrice = chains.reduce((sum, chain) => sum + priceData[chain], 0) / chains.length;
+    console.log('Calculated average price:', avgPrice);
     
-    // Create a simpler SVG without fancy fonts
+    // Create the SVG
+    console.log('Creating SVG response');
     const svg = `
       <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
         <rect width="1200" height="628" fill="#1e2d3a"/>
@@ -26,6 +29,7 @@ exports.handler = async function(event) {
       </svg>
     `;
     
+    console.log('Returning successful SVG response');
     return {
       statusCode: 200,
       headers: {
@@ -38,7 +42,12 @@ exports.handler = async function(event) {
       body: svg
     };
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in image function:', error);
+    console.log('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     
     // Return a simple SVG error image
     const errorSvg = `
@@ -46,9 +55,11 @@ exports.handler = async function(event) {
         <rect width="1200" height="628" fill="#5c1e1e"/>
         <text x="100" y="100" font-size="48" fill="white" font-weight="bold">Error Fetching $PAGE Prices</text>
         <text x="100" y="180" font-size="36" fill="white">Please try again later</text>
+        <text x="100" y="240" font-size="24" fill="#dddddd">${error.message}</text>
       </svg>
     `;
     
+    console.log('Returning error SVG response');
     return {
       statusCode: 500,
       headers: {
