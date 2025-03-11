@@ -381,5 +381,6 @@ async function fetchBasePagePrice(ethPrice) {
   }
 }
 module.exports = {
-  fetchPagePrices
+  fetchPagePrices,
+  getPoolReserves
 };
