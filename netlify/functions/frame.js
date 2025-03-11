@@ -74,33 +74,34 @@ exports.handler = async function(event) {
           `
         };
       }
+      
       // Handle venue-specific buttons
-      if ([1, 2, 3, 4].includes(buttonPressed)) {
+      if ([2, 3, 4, 5].includes(buttonPressed)) {
         let chain = "ethereum";
         let price = 0;
         let dexUrl = "";
         let chainName = "";
         
         switch(buttonPressed) {
-          case 1: // Ethereum
+          case 2: // Ethereum
             chain = "ethereum";
             price = priceData.ethereum;
             chainName = "Ethereum";
             dexUrl = PAGE_TOKEN_CONFIG[0].dexUrl;
             break;
-          case 2: // Optimism
+          case 3: // Optimism
             chain = "optimism";
             price = priceData.optimism;
             chainName = "Optimism";
             dexUrl = PAGE_TOKEN_CONFIG[1].dexUrl;
             break;
-          case 3: // Base
+          case 4: // Base
             chain = "base";
             price = priceData.base;
             chainName = "Base";
             dexUrl = PAGE_TOKEN_CONFIG[2].dexUrl;
             break;
-          case 4: // Osmosis
+          case 5: // Osmosis
             chain = "osmosis";
             price = priceData.osmosis;
             chainName = "Osmosis";
@@ -126,7 +127,7 @@ exports.handler = async function(event) {
               // Calculate TVL
               const pageValueInPool = reserves.tokenAAmount * price;
               const ethValue = reserves.tokenBAmount * priceData.ethPrice;
-              tvl = `${(pageValueInPool + ethValue).toLocaleString()}`;
+              tvl = `$${(pageValueInPool + ethValue).toLocaleString()}`;
               
               // Get PAGE tokens in pool
               pageTokensInPool = `${reserves.tokenAAmount.toLocaleString()} PAGE`;
@@ -145,7 +146,7 @@ exports.handler = async function(event) {
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
             <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE on ${chainName}</text>
-            <text x="100" y="180" font-size="36" fill="white">Price: ${price.toFixed(6)}</text>
+            <text x="100" y="180" font-size="36" fill="white">Price: $${price.toFixed(6)}</text>
             <text x="100" y="240" font-size="36" fill="white">Total Value Locked: ${tvl}</text>
             <text x="100" y="300" font-size="36" fill="white">$PAGE in Pool: ${pageTokensInPool}</text>
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
@@ -177,6 +178,7 @@ exports.handler = async function(event) {
           `
         };
       }
+      
     } catch (error) {
       console.error('Error processing button press:', error);
     }
