@@ -1,3 +1,6 @@
+// Import the token configuration
+const { PAGE_TOKEN_CONFIG } = require('./utils/tokenConfig');
+
 exports.handler = async function(event) {
   const { amount, fid } = JSON.parse(event.body);
   

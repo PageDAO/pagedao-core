@@ -5,27 +5,9 @@ const {
   PAGE_TOKEN_CONFIG,
   COSMOS_PAGE_TOKEN,
   ETH_USDC_PAIR,
-  RPC_URLS,
-  BACKUP_RPC_URLS,
   CACHE_DURATION
 } = require('./tokenConfig');
-
-// Uniswap V2 Pair ABI (minimal for getting reserves)
-const UNISWAP_V2_PAIR_ABI = [
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "getReserves",
-    "outputs": [
-      { "internalType": "uint112", "name": "_reserve0", "type": "uint112" },
-      { "internalType": "uint112", "name": "_reserve1", "type": "uint112" },
-      { "internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32" }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+const { getProvider, getPoolReserves } = require('./web3');
 
 // Uniswap V3 Pool ABI (minimal for price calculation)
 const UNISWAP_V3_POOL_ABI = [
@@ -41,27 +23,6 @@ const UNISWAP_V3_POOL_ABI = [
       { "internalType": "uint8", "name": "feeProtocol", "type": "uint8" },
       { "internalType": "bool", "name": "unlocked", "type": "bool" }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "liquidity",
-    "outputs": [{"internalType": "uint128", "name": "", "type": "uint128"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "token0",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "token1",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
     "stateMutability": "view",
     "type": "function"
   }
@@ -81,21 +42,21 @@ let priceCache = {
  * Fetches PAGE token prices from all supported chains
  */
 async function fetchPagePrices() {
-  // Check if cache is still valid (keeping cache for performance, not as fallback)
+  // Check if cache is still valid
   const now = Date.now();
   if (priceCache.timestamp > 0 && now - priceCache.timestamp < CACHE_DURATION) {
     console.log('Using cached prices:', priceCache);
     return priceCache;
   }
 
+  console.log('Fetching fresh PAGE token prices...');
+  
   try {
-    console.log('Fetching fresh PAGE token prices...');
-    
     // First get ETH price - we need this for all EVM chain calculations
     const ethPrice = await fetchEthPrice();
     console.log('Fetched ETH price:', ethPrice);
     
-    // Fetch prices in parallel - with NO fallbacks
+    // Fetch prices in parallel
     const [osmosisPrice, ethereumPrice, optimismPrice, basePrice] = await Promise.all([
       fetchOsmosisPrice(),
       fetchEthereumPagePrice(ethPrice),
@@ -116,9 +77,8 @@ async function fetchPagePrices() {
     console.log('Updated price cache:', priceCache);
     return priceCache;
   } catch (error) {
-    // Let the error propagate up to the caller instead of using fallbacks
     console.error('Error fetching prices:', error);
-    throw error;
+    throw error; // Let the error propagate to the caller
   }
 }
 
@@ -157,17 +117,12 @@ async function fetchEthPrice() {
     console.log('Raw price ratio:', rawPrice);
     
     // Adjust for token decimals
-    // If token0 is USDC (6 decimals) and token1 is ETH (18 decimals)
-    // Price in USDC / ETH needs adjustment by 10^(18-6) = 10^12
-    
     let ethPrice;
     if (ETH_USDC_PAIR.token0IsETH) {
       // If ETH is token0, then price = amount of token1 (USDC) per 1 of token0 (ETH)
-      // No decimal adjustment needed
       ethPrice = rawPrice;
     } else {
       // If ETH is token1, then price = amount of token0 (USDC) per 1 of token1 (ETH)
-      // Need to adjust by 10^(ETH_decimals - USDC_decimals)
       const decimalAdjustment = Math.pow(10, ETH_USDC_PAIR.decimals.ETH - ETH_USDC_PAIR.decimals.USDC);
       ethPrice = rawPrice * decimalAdjustment;
     }
@@ -178,8 +133,10 @@ async function fetchEthPrice() {
     console.error('Error fetching ETH price from Uniswap V3 pool:', error);
     throw error;
   }
-}/**
- * Calculate PAGE price from pool data (from EVMClient.ts)
+}
+
+/**
+ * Calculate PAGE price from pool data
  */
 function calculatePagePrice(poolData, ethPrice) {
   // PAGE price = ETH amount * ETH price / PAGE amount
@@ -252,50 +209,6 @@ async function fetchOsmosisPrice() {
     return pageUsdPrice;
   } catch (error) {
     console.error('Error fetching Osmosis price:', error);
-    return priceCache.osmosis || 0.12; // Fallback price
-  }
-}
-
-/**
- * Get a provider for the specified chain with fallback to backup RPC
- */
-function getProvider(chain) {
-  const primaryRpcUrl = RPC_URLS[chain];
-  const backupRpcUrl = BACKUP_RPC_URLS[chain];
-  
-  if (!primaryRpcUrl && !backupRpcUrl) {
-    throw new Error(`No RPC URL configured for chain: ${chain}`);
-  }
-  
-  console.log(`Using primary RPC for ${chain}: ${primaryRpcUrl}`);
-  return new ethers.JsonRpcProvider(primaryRpcUrl);
-}
-
-/**
- * Get pool reserves for a Uniswap V2-compatible pair
- */
-async function getPoolReserves(lpAddress, tokenConfig, chain) {
-  try {
-    const provider = getProvider(chain);
-    const pairContract = new ethers.Contract(lpAddress, UNISWAP_V2_PAIR_ABI, provider);
-    
-    // Get reserves
-    const [reserve0, reserve1] = await pairContract.getReserves();
-    
-    // Determine which reserve is PAGE and which is ETH based on tokenIsToken0
-    const pageReserve = tokenConfig.tokenIsToken0 ? reserve0 : reserve1;
-    const ethReserve = tokenConfig.tokenIsToken0 ? reserve1 : reserve0;
-    
-    // Convert reserves to proper numeric values based on decimals
-    const pageAmount = Number(pageReserve) / Math.pow(10, tokenConfig.decimals);
-    const ethAmount = Number(ethReserve) / Math.pow(10, 18); // ETH has 18 decimals
-    
-    return {
-      tokenAAmount: pageAmount, // PAGE
-      tokenBAmount: ethAmount   // ETH
-    };
-  } catch (error) {
-    console.error(`Error getting pool reserves for ${chain}:`, error);
     throw error;
   }
 }
@@ -323,7 +236,7 @@ async function fetchEthereumPagePrice(ethPrice) {
     return pagePrice;
   } catch (error) {
     console.error('Error fetching Ethereum PAGE price:', error);
-    return priceCache.ethereum || 0.12; // Fallback price
+    throw error;
   }
 }
 
@@ -350,7 +263,7 @@ async function fetchOptimismPagePrice(ethPrice) {
     return pagePrice;
   } catch (error) {
     console.error('Error fetching Optimism PAGE price:', error);
-    return priceCache.optimism || 0.12; // Fallback price
+    throw error;
   }
 }
 
@@ -377,9 +290,11 @@ async function fetchBasePagePrice(ethPrice) {
     return pagePrice;
   } catch (error) {
     console.error('Error fetching Base PAGE price:', error);
-    return priceCache.base || 0.12; // Fallback price
+    throw error;
   }
 }
+
 module.exports = {
-  fetchPagePrices
+  fetchPagePrices,
+  getPoolReserves
 };
