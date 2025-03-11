@@ -18,7 +18,57 @@ function isInitialButtonPress(body) {
          !body.untrustedData.state;
 }
 
-// Helper function to create overview SVG with improved visuals
+// More detailed logo SVGs for various chains and PageDAO
+const LOGOS = {
+  // PageDAO logo
+  PAGE: `
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+      <rect x="100" y="56" width="312" height="400" rx="32" ry="32" fill="#2a3f55" stroke="#4dabf7" stroke-width="12"/>
+      <text x="256" y="200" font-size="160" text-anchor="middle" fill="#4dabf7" font-weight="bold">P</text>
+      <rect x="180" y="280" width="150" height="24" fill="#4dabf7"/>
+      <rect x="180" y="340" width="100" height="24" fill="#4dabf7"/>
+    </svg>
+  `,
+  
+  // Ethereum logo (more detailed)
+  ETHEREUM: `
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 784 1277" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#343434" d="m392.07 0-8.57 29.11v844.63l8.57 8.55 392.06-231.75z"/>
+      <path fill="#8C8C8C" d="M392.07 0 0 650.54l392.07 231.75V472.33z"/>
+      <path fill="#3C3C3B" d="m392.07 956.52-4.83 5.89v300.87l4.83 14.1 392.3-552.49z"/>
+      <path fill="#8C8C8C" d="M392.07 1277.38V956.52l-392.07-231.75z"/>
+      <path fill="#141414" d="m392.07 882.29 392.06-231.75-392.06-178.21z"/>
+      <path fill="#393939" d="m0 650.54 392.07 231.75V472.33z"/>
+    </svg>
+  `,
+  
+  // Optimism logo (more detailed)
+  OPTIMISM: `
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="220" cy="220" r="220" fill="#FF0420"/>
+      <path fill="white" d="M140 182.5c0-29.75 23.73-50.75 58.48-50.75 35.24 0 59.2 21.5 59.2 52 0 30.25-24.45 52-59.7 52-34.75 0-57.98-21.25-57.98-53.25zm88.67.75c0-19.75-12.23-31.25-30.44-31.25-17.96 0-29.95 11.5-29.95 30.5 0 19.75 12.24 31.5 30.2 31.5 18.2 0 30.2-11.75 30.2-30.75zm-23.47-79.5h29.2v162.5h-29.2V103.75zm127.66 0v162.5h-29.2v-162.5h29.2z"/>
+    </svg>
+  `,
+  
+  // Base logo (more detailed)
+  BASE: `
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="512" cy="512" r="512" fill="#0052FF"/>
+      <path fill="white" d="M512 192c-176.4 0-320 143.6-320 320s143.6 320 320 320 320-143.6 320-320-143.6-320-320-320zm182.4 370.2C694.4 683.8 614.9 768 512 768c-102.9 0-182.4-84.2-182.4-205.8C329.6 440.6 409.1 356 512 356c102.9 0 182.4 84.6 182.4 206.2z"/>
+    </svg>
+  `,
+  
+  // Osmosis logo (more detailed)
+  OSMOSIS: `
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="48" cy="48" r="48" fill="#5E12A0"/>
+      <path fill="white" d="M70.7 47c-.4-4.7-2.7-9.3-6.6-12.7-5-4.5-11.9-6.1-18.4-4.8-3 .6-5.8 1.8-8.3 3.5-.3.2-.7.5-.9.7l-2.2-3.8c-.5-.9-1.7-1.3-2.6-.7l-8.9 5.2c-.9.5-1.2 1.7-.7 2.6l2.5 4.3c-1.1 1.9-1.8 4.1-2.1 6.3-.4 4.7.8 9.6 3.6 13.5 5 7.1 14 9.8 22.1 7.2 2.3-.7 4.4-1.8 6.3-3.1l2.2 3.7c.5.9 1.7 1.3 2.6.7l8.9-5.2c.9-.5 1.2-1.7.7-2.6l-2.5-4.2c2.3-2.9 3.7-6.6 4.3-10.6z"/>
+      <path fill="#5E12A0" d="M53.2 51c-1.4 6.6-7.1 10.9-12.8 9.6-5.7-1.3-9.1-7.8-7.6-14.4 1.4-6.6 7.1-10.9 12.8-9.6 5.7 1.3 9.1 7.8 7.6 14.4z"/>
+    </svg>
+  `
+};
+
+// Helper function to create overview SVG with improved visuals and PageDAO logo
 function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSupply) {
   return `
     <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
@@ -53,9 +103,8 @@ function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSup
       
       <text x="100" y="500" font-size="36" fill="#dddddd">Total Supply: <tspan fill="#a5d8ff">${totalSupply.toLocaleString()} PAGE</tspan></text>
       
-      <!-- PAGE token icon/badge -->
-      <circle cx="1000" cy="120" r="70" fill="#2a3f55" stroke="#4dabf7" stroke-width="3"/>
-      <text x="1000" y="140" font-size="50" text-anchor="middle" fill="white">PAGE</text>
+      <!-- PAGE logo -->
+      ${LOGOS.PAGE}
       
       <!-- Footer with timestamp -->
       <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
@@ -66,8 +115,15 @@ function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSup
   `;
 }
 
-// Function to create chain-specific SVG with improved visuals
+// Function to create chain-specific SVG with improved visuals and chain logo
 function createChainDetailSvg(chainName, price, tvl) {
+  // Select the appropriate logo based on chain name
+  let logo = LOGOS.PAGE;
+  if (chainName.toUpperCase() === 'ETHEREUM') logo = LOGOS.ETHEREUM;
+  else if (chainName.toUpperCase() === 'OPTIMISM') logo = LOGOS.OPTIMISM;
+  else if (chainName.toUpperCase() === 'BASE') logo = LOGOS.BASE;
+  else if (chainName.toUpperCase() === 'OSMOSIS') logo = LOGOS.OSMOSIS;
+
   return `
     <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
       <!-- Background -->
@@ -95,9 +151,8 @@ function createChainDetailSvg(chainName, price, tvl) {
       <!-- TVL - Larger with better contrast -->
       <text x="100" y="320" font-size="54" fill="white">TVL: <tspan font-weight="bold" fill="#4dabf7">${tvl}</tspan></text>
       
-      <!-- Chain-specific icon/badge -->
-      <circle cx="1000" cy="120" r="70" fill="#2a3f55" stroke="#4dabf7" stroke-width="3"/>
-      <text x="1000" y="140" font-size="50" text-anchor="middle" fill="white">${chainName.substring(0, 3).toUpperCase()}</text>
+      <!-- Chain-specific logo -->
+      ${logo}
       
       <!-- Footer with timestamp -->
       <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
@@ -127,6 +182,14 @@ function createErrorSvg(errorMessage) {
       <!-- Warning icon -->
       <circle cx="1000" cy="120" r="70" fill="#5c1e1e" stroke="#ff6b6b" stroke-width="3"/>
       <text x="1000" y="140" font-size="80" text-anchor="middle" fill="#ff6b6b">!</text>
+      
+      <!-- PAGE logo (small, at bottom) -->
+      <svg x="920" y="450" width="120" height="120" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <rect x="100" y="56" width="312" height="400" rx="32" ry="32" fill="#3c1212" stroke="#ff6b6b" stroke-width="12"/>
+        <text x="256" y="200" font-size="160" text-anchor="middle" fill="#ff6b6b" font-weight="bold">P</text>
+        <rect x="180" y="280" width="150" height="24" fill="#ff6b6b"/>
+        <rect x="180" y="340" width="100" height="24" fill="#ff6b6b"/>
+      </svg>
       
       <!-- Footer -->
       <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
