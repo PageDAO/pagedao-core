@@ -1,4 +1,4 @@
-const { fetchPagePrices, fetchPoolReserves } = require('./utils/tokenServices');
+const { fetchPagePrices, getPoolReserves } = require('./utils/tokenServices');
 const { PAGE_TOKEN_CONFIG } = require('./utils/tokenConfig');
 
 exports.handler = async function(event) {
@@ -40,9 +40,9 @@ exports.handler = async function(event) {
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
             <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE Token Metrics</text>
-            <text x="100" y="180" font-size="36" fill="white">Average Price: ${avgPrice.toFixed(6)}</text>
-            <text x="100" y="250" font-size="36" fill="white">Market Cap: ${(marketCap).toLocaleString()}</text>
-            <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: ${(fdv).toLocaleString()}</text>
+            <text x="100" y="180" font-size="36" fill="white">Average Price: $${avgPrice.toFixed(6)}</text>
+            <text x="100" y="250" font-size="36" fill="white">Market Cap: $${(marketCap).toLocaleString()}</text>
+            <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: $${(fdv).toLocaleString()}</text>
             <text x="100" y="400" font-size="28" fill="#aaaaaa">Circulating Supply: ${CIRCULATING_SUPPLY.toLocaleString()} PAGE</text>
             <text x="100" y="450" font-size="28" fill="#aaaaaa">Total Supply: ${TOTAL_SUPPLY.toLocaleString()} PAGE</text>
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
@@ -76,7 +76,7 @@ exports.handler = async function(event) {
       }
       
       // Handle venue-specific buttons
-      if (buttonPressed >= 2 && buttonPressed <= 5) {
+      if ([2, 3, 4, 5].includes(buttonPressed)) {
         let chain = "ethereum";
         let price = 0;
         let dexUrl = "";
@@ -120,11 +120,10 @@ exports.handler = async function(event) {
             );
             
             if (tokenConfig) {
-              const reserves = await fetchPoolReserves(tokenConfig.lpAddress, tokenConfig, chain);
+              const reserves = await getPoolReserves(tokenConfig.lpAddress, tokenConfig, chain);
               const pageValueInPool = reserves.tokenAAmount * price;
-              const ethValue = reserves.tokenBAmount * (chain === "ethereum" ? priceData.ethereum : 
-                               chain === "optimism" ? priceData.optimism : priceData.base);
-              tvl = (pageValueInPool + ethValue).toLocaleString();
+              const ethValue = reserves.tokenBAmount * priceData.ethPrice;
+              tvl = `$${(pageValueInPool + ethValue).toLocaleString()}`;
             }
           }
         } catch (error) {
@@ -139,9 +138,9 @@ exports.handler = async function(event) {
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
             <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE on ${chainName}</text>
-            <text x="100" y="180" font-size="36" fill="white">Price: ${price.toFixed(6)}</text>
-            <text x="100" y="240" font-size="36" fill="white">Market Cap: ${venueMarketCap.toLocaleString()}</text>
-            <text x="100" y="300" font-size="36" fill="white">FDV: ${venueFdv.toLocaleString()}</text>
+            <text x="100" y="180" font-size="36" fill="white">Price: $${price.toFixed(6)}</text>
+            <text x="100" y="240" font-size="36" fill="white">Market Cap: $${venueMarketCap.toLocaleString()}</text>
+            <text x="100" y="300" font-size="36" fill="white">FDV: $${venueFdv.toLocaleString()}</text>
             <text x="100" y="360" font-size="36" fill="white">TVL: ${tvl}</text>
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
           </svg>
