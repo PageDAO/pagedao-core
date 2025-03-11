@@ -18,7 +18,7 @@ function isInitialButtonPress(body) {
          !body.untrustedData.state;
 }
 
-// Helper function to create overview SVG with improved visuals
+// Helper function to create overview SVG with network names
 function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSupply) {
   return `
     <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
@@ -37,6 +37,14 @@ function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSup
       <text x="100" y="440" font-size="36" fill="#dddddd">Circulating Supply: ${circulatingSupply.toLocaleString()} PAGE</text>
       <text x="100" y="500" font-size="36" fill="#dddddd">Total Supply: ${totalSupply.toLocaleString()} PAGE</text>
       
+      <!-- Network label box -->
+      <rect x="800" y="40" width="320" height="200" rx="10" fill="#2a3f55"/>
+      <text x="960" y="90" font-size="28" text-anchor="middle" fill="white" font-weight="bold">Available Networks</text>
+      <text x="960" y="130" font-size="24" text-anchor="middle" fill="#4dabf7">Ethereum Mainnet</text>
+      <text x="960" y="160" font-size="24" text-anchor="middle" fill="#FF0420">Optimism Mainnet</text>
+      <text x="960" y="190" font-size="24" text-anchor="middle" fill="#0052FF">Base Mainnet</text>
+      <text x="960" y="220" font-size="24" text-anchor="middle" fill="#5E12A0">Osmosis Mainnet</text>
+      
       <!-- Footer with timestamp -->
       <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
     </svg>
@@ -45,6 +53,27 @@ function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSup
 
 // Function to create chain-specific SVG
 function createChainDetailSvg(chainName, price, tvl) {
+  // Get chain-specific styling
+  let chainColor = "#4dabf7"; // Default blue
+  let fullNetworkName = "Ethereum Mainnet";
+  
+  if (chainName.toUpperCase() === 'ETHEREUM') {
+    chainColor = "#6F7CBA";
+    fullNetworkName = "Ethereum Mainnet";
+  }
+  else if (chainName.toUpperCase() === 'OPTIMISM') {
+    chainColor = "#FF0420";
+    fullNetworkName = "Optimism Mainnet";
+  }
+  else if (chainName.toUpperCase() === 'BASE') {
+    chainColor = "#0052FF";
+    fullNetworkName = "Base Mainnet";
+  }
+  else if (chainName.toUpperCase() === 'OSMOSIS') {
+    chainColor = "#5E12A0";
+    fullNetworkName = "Osmosis Mainnet";
+  }
+
   return `
     <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
       <!-- Background -->
@@ -53,15 +82,15 @@ function createChainDetailSvg(chainName, price, tvl) {
       <!-- Title -->
       <text x="100" y="120" font-size="64" fill="white" font-weight="bold">$PAGE on ${chainName}</text>
       
+      <!-- Network Name -->
+      <rect x="800" y="40" width="320" height="80" rx="10" fill="${chainColor}"/>
+      <text x="960" y="90" font-size="28" text-anchor="middle" fill="white" font-weight="bold">${fullNetworkName}</text>
+      
       <!-- Price -->
-      <text x="100" y="220" font-size="54" fill="white">Price: $${price.toFixed(6)}</text>
+      <text x="100" y="220" font-size="54" fill="white">Price: <tspan font-weight="bold" fill="${chainColor}">$${price.toFixed(6)}</tspan></text>
       
       <!-- TVL -->
-      <text x="100" y="320" font-size="54" fill="white">TVL: ${tvl}</text>
-      
-      <!-- Chain label -->
-      <rect x="900" y="80" width="200" height="80" rx="10" fill="#4dabf7"/>
-      <text x="1000" y="130" font-size="36" text-anchor="middle" fill="white" font-weight="bold">${chainName}</text>
+      <text x="100" y="320" font-size="54" fill="white">TVL: <tspan font-weight="bold" fill="${chainColor}">${tvl}</tspan></text>
       
       <!-- Footer with timestamp -->
       <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
