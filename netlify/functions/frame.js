@@ -36,9 +36,7 @@ exports.handler = async function(event) {
               ((priceData.ethereum + priceData.optimism + priceData.base + priceData.osmosis) / 4).toFixed(6)
             }</text>
             
-            <!-- Add a visual trading call-to-action -->
-            <rect x="100" y="480" width="500" height="60" fill="#0052ff" rx="10" />
-            <text x="350" y="522" font-size="32" fill="white" text-anchor="middle">Trade $PAGE on Base via Uniswap</text>
+            
             
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
           </svg>
