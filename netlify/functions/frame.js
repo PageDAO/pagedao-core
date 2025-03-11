@@ -75,9 +75,8 @@ exports.handler = async function(event) {
     }
   }
   
-  // Default return for initial load or errors
-  const basePageToken = PAGE_TOKEN_CONFIG.find(token => token.chainId === 8453);
-  const uniswapUrl = basePageToken.dexUrl;
+
+  const uniswapUrl = "https://app.uniswap.org/#/swap?outputCurrency=0xc4730f86d1F86cE0712a7b17EE919Db7dEFad7FE&chain=base";
   return {
     statusCode: 200,
     headers: {"Content-Type": "text/html"},
@@ -87,21 +86,14 @@ exports.handler = async function(event) {
     <head>
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="${imageUrl}" />
-      <meta property="fc:frame:button:1" content="Refresh Prices" />
-      <meta property="fc:frame:button:2" content="Trade $PAGE on Base" />
-      <meta property="fc:frame:button:3" content="Visit PageDAO.org" />
-      <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+      <meta property="fc:frame:button:1" content="Show Prices" />
+      <meta property="fc:frame:button:2" content="Trade on Uniswap" />
       <meta property="fc:frame:button:2:action" content="link" />
       <meta property="fc:frame:button:2:target" content="${uniswapUrl}" />
-      <meta property="fc:frame:button:3:action" content="link" />
-      <meta property="fc:frame:button:3:target" content="https://pagedao.org" />
+      <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
       <title>PAGE Token Prices</title>
     </head>
-    <body>
-      <h1>PAGE Token Prices</h1>
-    </body>
+    <body></body>
     </html>
     `
-  }
-  
-};
+  };}
