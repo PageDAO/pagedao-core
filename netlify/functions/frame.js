@@ -16,40 +16,33 @@ exports.handler = async function(event) {
   const CIRCULATING_SUPPLY = 42500000;
   const TOTAL_SUPPLY = 100000000;
   
-  // Get the current state from the URL if present
-  const url = new URL(event.rawUrl || `${host}${event.path}`);
-  const currentState = url.searchParams.get('state') || 'initial';
-  
   // Parse POST data if this is a button interaction
   if (isPost && event.body) {
     try {
       const body = JSON.parse(event.body);
       buttonPressed = body.untrustedData?.buttonIndex;
-      console.log("Button pressed:", buttonPressed, "Current state:", currentState);
+      console.log("Button pressed:", buttonPressed);
       
-      // Fetch latest prices for all calculations
-      const priceData = await fetchPagePrices();
-      console.log("Fetched prices:", priceData);
-      
-      // Calculate average price
-      const avgPrice = (priceData.ethereum + priceData.optimism + priceData.base + priceData.osmosis) / 4;
-      
-      // Calculate market cap and FDV based on average price
-      const marketCap = avgPrice * CIRCULATING_SUPPLY;
-      const fdv = avgPrice * TOTAL_SUPPLY;
-      
-      // Handle button press based on current state
-      
-      // INITIAL STATE
-      if (currentState === 'initial' && buttonPressed === 1) {
-        // User clicked "Show Overview" from initial state
+      // If button 1 (Show Prices) is pressed on the initial screen
+      if (buttonPressed === 1) {
+        // Fetch latest prices
+        const priceData = await fetchPagePrices();
+        console.log("Fetched prices:", priceData);
+        
+        // Calculate average price
+        const avgPrice = (priceData.ethereum + priceData.optimism + priceData.base + priceData.osmosis) / 4;
+        
+        // Calculate market cap and FDV based on average price
+        const marketCap = avgPrice * CIRCULATING_SUPPLY;
+        const fdv = avgPrice * TOTAL_SUPPLY;
+        
         const svg = `
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
             <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE Token Metrics</text>
-            <text x="100" y="180" font-size="36" fill="white">Average Price: ${avgPrice.toFixed(6)}</text>
-            <text x="100" y="250" font-size="36" fill="white">Market Cap: ${(marketCap).toLocaleString()}</text>
-            <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: ${(fdv).toLocaleString()}</text>
+            <text x="100" y="180" font-size="36" fill="white">Average Price: $${avgPrice.toFixed(6)}</text>
+            <text x="100" y="250" font-size="36" fill="white">Market Cap: $${(marketCap).toLocaleString()}</text>
+            <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: $${(fdv).toLocaleString()}</text>
             <text x="100" y="400" font-size="28" fill="#aaaaaa">Circulating Supply: ${CIRCULATING_SUPPLY.toLocaleString()} PAGE</text>
             <text x="100" y="450" font-size="28" fill="#aaaaaa">Total Supply: ${TOTAL_SUPPLY.toLocaleString()} PAGE</text>
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
@@ -73,7 +66,7 @@ exports.handler = async function(event) {
             <meta property="fc:frame:button:2" content="Optimism" />
             <meta property="fc:frame:button:3" content="Base" />
             <meta property="fc:frame:button:4" content="Osmosis" />
-            <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame?state=overview" />
+            <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
             <title>PAGE Token Metrics</title>
           </head>
           <body></body>
@@ -82,8 +75,11 @@ exports.handler = async function(event) {
         };
       }
       
-      // OVERVIEW STATE - Handle chain selection
-      else if (currentState === 'overview') {
+      // Handle chain-specific buttons (from overview screen)
+      else if (buttonPressed >= 1 && buttonPressed <= 4) {
+        // Get the latest prices again to ensure fresh data
+        const priceData = await fetchPagePrices();
+        
         let chain = "";
         let price = 0;
         let dexUrl = "";
@@ -95,19 +91,19 @@ exports.handler = async function(event) {
             chain = "ethereum";
             price = priceData.ethereum;
             chainName = "Ethereum";
-            dexUrl = PAGE_TOKEN_CONFIG[0].dexUrl;
+            dexUrl = "https://app.uniswap.org/#/swap?outputCurrency=0x3F382DbD960E3a9bbCeaE22651E88158d2791550&chain=ethereum";
             break;
           case 2: // Optimism
             chain = "optimism";
             price = priceData.optimism;
             chainName = "Optimism";
-            dexUrl = PAGE_TOKEN_CONFIG[1].dexUrl;
+            dexUrl = "https://app.uniswap.org/#/swap?outputCurrency=0x95aE5f69A02999cB8b18Fc47f54ca0d99Ae58227&chain=optimism";
             break;
           case 3: // Base
             chain = "base";
             price = priceData.base;
             chainName = "Base";
-            dexUrl = PAGE_TOKEN_CONFIG[2].dexUrl;
+            dexUrl = "https://app.uniswap.org/#/swap?outputCurrency=0xc4730f86d1F86cE0712a7b17EE919Db7dEFad7FE&chain=base";
             break;
           case 4: // Osmosis
             chain = "osmosis";
@@ -115,13 +111,6 @@ exports.handler = async function(event) {
             chainName = "Osmosis";
             dexUrl = "https://app.osmosis.zone/?from=USDC&to=PAGE";
             break;
-          default:
-            // Invalid button - show overview again
-            return {
-              statusCode: 302,
-              headers: {"Location": `${host}/.netlify/functions/frame?state=initial`},
-              body: ""
-            };
         }
         
         if (!chain) return;
@@ -144,16 +133,20 @@ exports.handler = async function(event) {
               // Calculate TVL
               const pageValueInPool = reserves.tokenAAmount * price;
               const ethValue = reserves.tokenBAmount * priceData.ethPrice;
-              tvl = `${(pageValueInPool + ethValue).toLocaleString()}`;
+              tvl = `$${(pageValueInPool + ethValue).toLocaleString()}`;
               
               // Get PAGE tokens in pool
               pageTokensInPool = `${reserves.tokenAAmount.toLocaleString()} PAGE`;
             }
           } else {
-            // For Osmosis, use our new function
-            const osmosisData = await getOsmosisPoolData();
-            tvl = `${osmosisData.tvl.toLocaleString()}`;
-            pageTokensInPool = `${osmosisData.pageAmount.toLocaleString()} PAGE`;
+            // For Osmosis
+            try {
+              const osmosisData = await getOsmosisPoolData();
+              tvl = `$${osmosisData.tvl.toLocaleString()}`;
+              pageTokensInPool = `${osmosisData.pageAmount.toLocaleString()} PAGE`;
+            } catch (error) {
+              console.error('Error getting Osmosis data:', error);
+            }
           }
         } catch (error) {
           console.error(`Error getting pool data for ${chain}:`, error);
@@ -163,7 +156,7 @@ exports.handler = async function(event) {
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
             <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE on ${chainName}</text>
-            <text x="100" y="180" font-size="36" fill="white">Price: ${price.toFixed(6)}</text>
+            <text x="100" y="180" font-size="36" fill="white">Price: $${price.toFixed(6)}</text>
             <text x="100" y="240" font-size="36" fill="white">Total Value Locked: ${tvl}</text>
             <text x="100" y="300" font-size="36" fill="white">$PAGE in Pool: ${pageTokensInPool}</text>
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
@@ -183,12 +176,12 @@ exports.handler = async function(event) {
           <head>
             <meta property="fc:frame" content="vNext" />
             <meta property="fc:frame:image" content="${imageUrl}" />
-            <meta property="fc:frame:button:1" content="Back to Overview" />
+            <meta property="fc:frame:button:1" content="Back" />
             <meta property="fc:frame:button:2" content="Trade on ${chainName}" />
             <meta property="fc:frame:button:2:action" content="link" />
             <meta property="fc:frame:button:2:target" content="${dexUrl}" />
-            <meta property="fc:frame:button:3" content="Return Home" />
-            <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame?state=overview" />
+            <meta property="fc:frame:button:3" content="Home" />
+            <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame?action=${buttonPressed === 1 ? 'back' : 'home'}" />
             <title>PAGE Token on ${chainName}</title>
           </head>
           <body></body>
@@ -196,22 +189,77 @@ exports.handler = async function(event) {
           `
         };
       }
-            // CHAIN-SPECIFIC STATE - Button 1 returns to overview
-      else if (currentState === 'chain' && buttonPressed === 1) {
-        // Redirect back to overview
+      
+      // Handle "Back" button from chain screen - show overview again
+      else if (event.queryStringParameters?.action === 'back') {
+        // Fetch latest prices
+        const priceData = await fetchPagePrices();
+        
+        // Calculate average price
+        const avgPrice = (priceData.ethereum + priceData.optimism + priceData.base + priceData.osmosis) / 4;
+        
+        // Calculate market cap and FDV based on average price
+        const marketCap = avgPrice * CIRCULATING_SUPPLY;
+        const fdv = avgPrice * TOTAL_SUPPLY;
+        
+        const svg = `
+          <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
+            <rect width="1200" height="628" fill="#1e2d3a"/>
+            <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE Token Metrics</text>
+            <text x="100" y="180" font-size="36" fill="white">Average Price: $${avgPrice.toFixed(6)}</text>
+            <text x="100" y="250" font-size="36" fill="white">Market Cap: $${(marketCap).toLocaleString()}</text>
+            <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: $${(fdv).toLocaleString()}</text>
+            <text x="100" y="400" font-size="28" fill="#aaaaaa">Circulating Supply: ${CIRCULATING_SUPPLY.toLocaleString()} PAGE</text>
+            <text x="100" y="450" font-size="28" fill="#aaaaaa">Total Supply: ${TOTAL_SUPPLY.toLocaleString()} PAGE</text>
+            <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
+          </svg>
+        `;
+        
+        // Encode SVG to data URI
+        const svgBase64 = Buffer.from(svg).toString('base64');
+        imageUrl = `data:image/svg+xml;base64,${svgBase64}`;
+        
         return {
-          statusCode: 302,
-          headers: {"Location": `${host}/.netlify/functions/frame?state=overview`},
-          body: ""
+          statusCode: 200,
+          headers: {"Content-Type": "text/html"},
+          body: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta property="fc:frame" content="vNext" />
+            <meta property="fc:frame:image" content="${imageUrl}" />
+            <meta property="fc:frame:button:1" content="Ethereum" />
+            <meta property="fc:frame:button:2" content="Optimism" />
+            <meta property="fc:frame:button:3" content="Base" />
+            <meta property="fc:frame:button:4" content="Osmosis" />
+            <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+            <title>PAGE Token Metrics</title>
+          </head>
+          <body></body>
+          </html>
+          `
         };
       }
-      // CHAIN-SPECIFIC STATE - Handle "Return Home" button
-      else if (currentState === 'overview' && buttonPressed === 3) {
-        // Redirect all the way back to the home/initial screen
+      
+      // Handle "Home" button - return to initial screen
+      else if (event.queryStringParameters?.action === 'home' || buttonPressed === 3) {
+        // Just return the initial screen
         return {
-          statusCode: 302,
-          headers: {"Location": `${host}/.netlify/functions/frame`},
-          body: ""
+          statusCode: 200,
+          headers: {"Content-Type": "text/html"},
+          body: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta property="fc:frame" content="vNext" />
+            <meta property="fc:frame:image" content="${imageUrl}" />
+            <meta property="fc:frame:button:1" content="Show Prices" />
+            <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+            <title>PAGE Token Metrics</title>
+          </head>
+          <body></body>
+          </html>
+          `
         };
       }
       
@@ -220,7 +268,7 @@ exports.handler = async function(event) {
     }
   }
   
-  // Initial frame
+  // Initial frame - this is the home screen with just the "Show Prices" button
   return {
     statusCode: 200,
     headers: {"Content-Type": "text/html"},
@@ -230,8 +278,8 @@ exports.handler = async function(event) {
     <head>
       <meta property="fc:frame" content="vNext" />
       <meta property="fc:frame:image" content="${imageUrl}" />
-      <meta property="fc:frame:button:1" content="Show Overview" />
-      <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame?state=initial" />
+      <meta property="fc:frame:button:1" content="Show Prices" />
+      <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
       <title>PAGE Token Metrics</title>
     </head>
     <body></body>
