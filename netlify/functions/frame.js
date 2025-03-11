@@ -52,20 +52,20 @@ exports.handler = async function(event) {
           statusCode: 200,
           headers: {"Content-Type": "text/html"},
           body: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="${imageUrl}" />
-              <meta property="fc:frame:button:1" content="Trade Now" />
-              <meta property="fc:frame:button:1:action" content="link" />
-              <meta property="fc:frame:button:1:target" content="https://app.uniswap.org/#/swap?outputCurrency=0xc4730f86d1F86cE0712a7b17EE919Db7dEFad7FE&chain=base" />
-              <meta property="fc:frame:button:2" content="Refresh Prices" />
-              <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
-              <title>PAGE Token Prices</title>
-            </head>
-            <body></body>
-            </html>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta property="fc:frame" content="vNext" />
+            <meta property="fc:frame:image" content="${imageUrl}" />
+            <meta property="fc:frame:button:1" content="Trade $PAGE on Base" />
+            <meta property="fc:frame:button:1:action" content="link" />
+            <meta property="fc:frame:button:1:target" content="https://app.uniswap.org/#/swap?outputCurrency=0xc4730f86d1F86cE0712a7b17EE919Db7dEFad7FE&chain=base" />
+            <meta property="fc:frame:button:2" content="Refresh Prices" />
+            <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+            <title>PAGE Token Metrics</title>
+          </head>
+          <body></body>
+          </html>
           `
         };
       }
