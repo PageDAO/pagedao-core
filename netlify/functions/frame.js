@@ -109,10 +109,8 @@ exports.handler = async function(event) {
             break;
         }
         
-        // Get pool reserves data if available (for TVL and token count)
+        // Get pool reserves data if available (for TVL)
         let tvl = "N/A";
-        let pageTokensInPool = "N/A";
-        
         try {
           if (chain !== "osmosis") {
             const tokenConfig = PAGE_TOKEN_CONFIG.find(config => 
@@ -123,32 +121,27 @@ exports.handler = async function(event) {
             
             if (tokenConfig) {
               const reserves = await getPoolReserves(tokenConfig.lpAddress, tokenConfig, chain);
-              
-              // Calculate TVL
               const pageValueInPool = reserves.tokenAAmount * price;
               const ethValue = reserves.tokenBAmount * priceData.ethPrice;
               tvl = `$${(pageValueInPool + ethValue).toLocaleString()}`;
-              
-              // Get PAGE tokens in pool
-              pageTokensInPool = `${reserves.tokenAAmount.toLocaleString()} PAGE`;
             }
-          } else {
-            // For Osmosis, we don't currently have a direct way to get this data
-            // This would require additional API calls to get Osmosis pool data
-            tvl = "Data unavailable";
-            pageTokensInPool = "Data unavailable";
           }
         } catch (error) {
-          console.error(`Error getting pool data for ${chain}:`, error);
+          console.error(`Error getting TVL for ${chain}:`, error);
         }
+        
+        // Calculate market cap and FDV for this specific venue
+        const venueMarketCap = price * CIRCULATING_SUPPLY;
+        const venueFdv = price * TOTAL_SUPPLY;
         
         const svg = `
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
             <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE on ${chainName}</text>
             <text x="100" y="180" font-size="36" fill="white">Price: $${price.toFixed(6)}</text>
-            <text x="100" y="240" font-size="36" fill="white">Total Value Locked: ${tvl}</text>
-            <text x="100" y="300" font-size="36" fill="white">$PAGE in Pool: ${pageTokensInPool}</text>
+            <text x="100" y="240" font-size="36" fill="white">Market Cap: $${venueMarketCap.toLocaleString()}</text>
+            <text x="100" y="300" font-size="36" fill="white">FDV: $${venueFdv.toLocaleString()}</text>
+            <text x="100" y="360" font-size="36" fill="white">TVL: ${tvl}</text>
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
           </svg>
         `;
