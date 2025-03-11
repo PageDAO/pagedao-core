@@ -7,7 +7,24 @@ const {
   ETH_USDC_PAIR,
   CACHE_DURATION
 } = require('./tokenConfig');
-const { getProvider, getPoolReserves } = require('./web3');
+const { getProvider } = require('./web3');
+
+// Uniswap V2 Pair ABI (minimal for getting reserves)
+const UNISWAP_V2_PAIR_ABI = [
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "getReserves",
+    "outputs": [
+      { "internalType": "uint112", "name": "_reserve0", "type": "uint112" },
+      { "internalType": "uint112", "name": "_reserve1", "type": "uint112" },
+      { "internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32" }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
 
 // Uniswap V3 Pool ABI (minimal for price calculation)
 const UNISWAP_V3_POOL_ABI = [
@@ -35,7 +52,8 @@ let priceCache = {
   base: null,
   osmosis: null,
   timestamp: 0,
-  ethPrice: null
+  ethPrice: null,
+  osmosisTVL: null
 };
 
 /**
@@ -57,11 +75,12 @@ async function fetchPagePrices() {
     console.log('Fetched ETH price:', ethPrice);
     
     // Fetch prices in parallel
-    const [osmosisPrice, ethereumPrice, optimismPrice, basePrice] = await Promise.all([
+    const [osmosisPrice, ethereumPrice, optimismPrice, basePrice, osmosisTVL] = await Promise.all([
       fetchOsmosisPrice(),
       fetchEthereumPagePrice(ethPrice),
       fetchOptimismPagePrice(ethPrice),
-      fetchBasePagePrice(ethPrice)
+      fetchBasePagePrice(ethPrice),
+      fetchOsmosisTVL()
     ]);
 
     // Update cache
@@ -71,6 +90,7 @@ async function fetchPagePrices() {
       base: basePrice,
       osmosis: osmosisPrice,
       ethPrice: ethPrice,
+      osmosisTVL: osmosisTVL,
       timestamp: now
     };
 
@@ -214,6 +234,110 @@ async function fetchOsmosisPrice() {
 }
 
 /**
+ * Fetch Osmosis TVL from pool data
+ */
+async function fetchOsmosisTVL() {
+  try {
+    console.log('Fetching Osmosis TVL...');
+    
+    // Get PAGE/OSMO pool data (Pool 1344)
+    const poolResponse = await axios.get(`${OSMOSIS_LCD}/osmosis/gamm/v1beta1/pools/${POOL_ID}`);
+    
+    if (!poolResponse.data || !poolResponse.data.pool || !poolResponse.data.pool.pool_assets) {
+      throw new Error('Invalid pool data structure');
+    }
+    
+    const assets = poolResponse.data.pool.pool_assets;
+    
+    // Find PAGE and OSMO in pool assets
+    const pageAsset = assets.find(asset => 
+      asset.token.denom === OSMOSIS_PAGE_DENOM
+    );
+    
+    const osmoAsset = assets.find(asset => 
+      asset.token.denom === 'uosmo'
+    );
+    
+    if (!pageAsset || !osmoAsset) {
+      throw new Error('Could not identify tokens in pool');
+    }
+    
+    // Get amounts from pool assets
+    const pageAmount = Number(pageAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.PAGE);
+    const osmoAmount = Number(osmoAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.OSMO);
+    
+    // Get OSMO/USDC price from pool 678
+    const osmoUsdcResponse = await axios.get(`${OSMOSIS_LCD}/osmosis/gamm/v1beta1/pools/${OSMO_USDC_POOL_ID}`);
+    
+    if (!osmoUsdcResponse.data || !osmoUsdcResponse.data.pool || !osmoUsdcResponse.data.pool.pool_assets) {
+      throw new Error('Invalid OSMO/USDC pool data');
+    }
+    
+    const osmoUsdcAssets = osmoUsdcResponse.data.pool.pool_assets;
+    
+    const osmoUsdcAsset = osmoUsdcAssets.find(asset => 
+      asset.token.denom === 'uosmo'
+    );
+    
+    const usdcAsset = osmoUsdcAssets.find(asset => 
+      asset.token.denom.includes(OSMO_USDC_DENOM)
+    );
+    
+    if (!osmoUsdcAsset || !usdcAsset) {
+      throw new Error('Could not identify tokens in OSMO/USDC pool');
+    }
+    
+    const osmoAmountUsdcPool = Number(osmoUsdcAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.OSMO);
+    const usdcAmount = Number(usdcAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.USDC);
+    
+    // Calculate OSMO price in USD
+    const osmoUsdPrice = usdcAmount / osmoAmountUsdcPool;
+    
+    // Calculate TVL in USD
+    const osmoValueInUsd = osmoAmount * osmoUsdPrice;
+    const pagePrice = (osmoAmount * osmoUsdPrice) / pageAmount;
+    const pageValueInUsd = pageAmount * pagePrice;
+    
+    const totalTvl = osmoValueInUsd + pageValueInUsd;
+    
+    console.log('Calculated Osmosis TVL:', totalTvl);
+    return totalTvl;
+  } catch (error) {
+    console.error('Error fetching Osmosis TVL:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get pool reserves for a Uniswap V2-compatible pair
+ */
+async function getPoolReserves(lpAddress, tokenConfig, chain) {
+  try {
+    const provider = getProvider(chain);
+    const pairContract = new ethers.Contract(lpAddress, UNISWAP_V2_PAIR_ABI, provider);
+    
+    // Get reserves
+    const [reserve0, reserve1] = await pairContract.getReserves();
+    
+    // Determine which reserve is PAGE and which is ETH based on tokenIsToken0
+    const pageReserve = tokenConfig.tokenIsToken0 ? reserve0 : reserve1;
+    const ethReserve = tokenConfig.tokenIsToken0 ? reserve1 : reserve0;
+    
+    // Convert reserves to proper numeric values based on decimals
+    const pageAmount = Number(pageReserve) / Math.pow(10, tokenConfig.decimals);
+    const ethAmount = Number(ethReserve) / Math.pow(10, 18); // ETH has 18 decimals
+    
+    return {
+      tokenAAmount: pageAmount, // PAGE
+      tokenBAmount: ethAmount   // ETH
+    };
+  } catch (error) {
+    console.error(`Error getting pool reserves for ${chain}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Fetch Ethereum PAGE price using actual Uniswap pool data
  */
 async function fetchEthereumPagePrice(ethPrice) {
@@ -296,5 +420,6 @@ async function fetchBasePagePrice(ethPrice) {
 
 module.exports = {
   fetchPagePrices,
-  getPoolReserves
+  getPoolReserves,
+  fetchOsmosisTVL
 };

@@ -1,4 +1,4 @@
-const { fetchPagePrices, getPoolReserves } = require('./utils/tokenServices');
+const { fetchPagePrices, getPoolReserves, fetchOsmosisTVL } = require('./utils/tokenServices');
 const { PAGE_TOKEN_CONFIG } = require('./utils/tokenConfig');
 
 exports.handler = async function(event) {
@@ -117,7 +117,17 @@ exports.handler = async function(event) {
           // Get pool reserves data if available (for TVL)
           let tvl = "N/A";
           try {
-            if (chain !== "osmosis") {
+            if (chain === "osmosis") {
+              // For Osmosis, use our dedicated TVL calculation
+              if (priceData.osmosisTVL) {
+                tvl = `$${priceData.osmosisTVL.toLocaleString()}`;
+              } else {
+                // If not in cache, fetch it directly
+                const osmosisTVL = await fetchOsmosisTVL();
+                tvl = `$${osmosisTVL.toLocaleString()}`;
+              }
+            } else {
+              // For EVM chains, use existing calculation
               const tokenConfig = PAGE_TOKEN_CONFIG.find(config => 
                 (chain === "ethereum" && config.chainId === 1) ||
                 (chain === "optimism" && config.chainId === 10) ||
