@@ -18,19 +18,32 @@ function isInitialButtonPress(body) {
          !body.untrustedData.state;
 }
 
-// More detailed logo SVGs for various chains and PageDAO
+// More detailed accurate logo SVGs for various chains and PageDAO
 const LOGOS = {
-  // PageDAO logo
+  // PageDAO logo (book with yellow elements and bookmark)
   PAGE: `
-    <svg x="900" y="40" width="200" height="200" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-      <rect x="100" y="56" width="312" height="400" rx="32" ry="32" fill="#2a3f55" stroke="#4dabf7" stroke-width="12"/>
-      <text x="256" y="200" font-size="160" text-anchor="middle" fill="#4dabf7" font-weight="bold">P</text>
-      <rect x="180" y="280" width="150" height="24" fill="#4dabf7"/>
-      <rect x="180" y="340" width="100" height="24" fill="#4dabf7"/>
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- Book/page body -->
+      <path d="M15,10 L75,5 C80,5 85,10 85,15 L85,85 C85,90 80,95 75,95 L15,90 C10,90 5,85 5,80 L5,20 C5,15 10,10 15,10 Z" 
+          fill="white" stroke="#000000" stroke-width="2"/>
+      
+      <!-- Page fold top-right corner -->
+      <path d="M75,5 L85,15 L75,15 L75,5 Z" fill="#f0f0f0" stroke="#000000" stroke-width="1.5"/>
+      
+      <!-- Yellow circles (PAGE logo elements) -->
+      <circle cx="45" cy="28" r="15" fill="#F9CC46"/>
+      <rect x="30" y="42" width="30" height="6" fill="#F9CC46"/>
+      <rect x="30" y="53" width="30" height="6" fill="#F9CC46"/>
+      
+      <!-- Bookmark -->
+      <path d="M45,95 L45,120 L55,110 L65,120 L65,95" fill="#F9CC46" stroke="#000000" stroke-width="1.5"/>
+      
+      <!-- Spine detail -->
+      <path d="M15,10 C12,10 10,12 8,15 L8,85 C10,88 12,90 15,90" fill="none" stroke="#000000" stroke-width="1"/>
     </svg>
   `,
   
-  // Ethereum logo (more detailed)
+  // Ethereum logo (accurate)
   ETHEREUM: `
     <svg x="900" y="40" width="200" height="200" viewBox="0 0 784 1277" xmlns="http://www.w3.org/2000/svg">
       <path fill="#343434" d="m392.07 0-8.57 29.11v844.63l8.57 8.55 392.06-231.75z"/>
@@ -42,15 +55,16 @@ const LOGOS = {
     </svg>
   `,
   
-  // Optimism logo (more detailed)
+  // Optimism logo (accurate with OP on red background)
   OPTIMISM: `
-    <svg x="900" y="40" width="200" height="200" viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="220" cy="220" r="220" fill="#FF0420"/>
-      <path fill="white" d="M140 182.5c0-29.75 23.73-50.75 58.48-50.75 35.24 0 59.2 21.5 59.2 52 0 30.25-24.45 52-59.7 52-34.75 0-57.98-21.25-57.98-53.25zm88.67.75c0-19.75-12.23-31.25-30.44-31.25-17.96 0-29.95 11.5-29.95 30.5 0 19.75 12.24 31.5 30.2 31.5 18.2 0 30.2-11.75 30.2-30.75zm-23.47-79.5h29.2v162.5h-29.2V103.75zm127.66 0v162.5h-29.2v-162.5h29.2z"/>
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" fill="#FF0420"/>
+      <path d="M30,40 C30,30 38,25 48,25 C58,25 66,30 66,40 C66,50 58,55 48,55 C38,55 30,50 30,40 Z M50,40 C50,35 46,33 42,33 C38,33 34,35 34,40 C34,45 38,47 42,47 C46,47 50,45 50,40 Z" fill="white"/>
+      <path d="M55,25 L65,25 L65,55 L55,55 Z" fill="white"/>
     </svg>
   `,
   
-  // Base logo (more detailed)
+  // Base logo
   BASE: `
     <svg x="900" y="40" width="200" height="200" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
       <circle cx="512" cy="512" r="512" fill="#0052FF"/>
@@ -58,12 +72,45 @@ const LOGOS = {
     </svg>
   `,
   
-  // Osmosis logo (more detailed)
+  // Osmosis logo (accurate potion flask)
   OSMOSIS: `
-    <svg x="900" y="40" width="200" height="200" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="48" cy="48" r="48" fill="#5E12A0"/>
-      <path fill="white" d="M70.7 47c-.4-4.7-2.7-9.3-6.6-12.7-5-4.5-11.9-6.1-18.4-4.8-3 .6-5.8 1.8-8.3 3.5-.3.2-.7.5-.9.7l-2.2-3.8c-.5-.9-1.7-1.3-2.6-.7l-8.9 5.2c-.9.5-1.2 1.7-.7 2.6l2.5 4.3c-1.1 1.9-1.8 4.1-2.1 6.3-.4 4.7.8 9.6 3.6 13.5 5 7.1 14 9.8 22.1 7.2 2.3-.7 4.4-1.8 6.3-3.1l2.2 3.7c.5.9 1.7 1.3 2.6.7l8.9-5.2c.9-.5 1.2-1.7.7-2.6l-2.5-4.2c2.3-2.9 3.7-6.6 4.3-10.6z"/>
-      <path fill="#5E12A0" d="M53.2 51c-1.4 6.6-7.1 10.9-12.8 9.6-5.7-1.3-9.1-7.8-7.6-14.4 1.4-6.6 7.1-10.9 12.8-9.6 5.7 1.3 9.1 7.8 7.6 14.4z"/>
+    <svg x="900" y="40" width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Gradient for flask liquid -->
+        <linearGradient id="osmosis-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#2D248A;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#7B2AB3;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#E93D82;stop-opacity:1" />
+        </linearGradient>
+        
+        <!-- Gradient for flask glass -->
+        <linearGradient id="flask-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#9467D0;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#6C38A3;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      
+      <!-- Flask outline -->
+      <circle cx="100" cy="100" r="85" stroke="#5E2D9A" stroke-width="8" fill="url(#flask-glass)" />
+      
+      <!-- Liquid inside flask -->
+      <path d="M30,100 C30,120 40,150 100,150 C160,150 170,120 170,100 C170,80 160,50 100,50 C40,50 30,80 30,100 Z" 
+          fill="url(#osmosis-gradient)" />
+      
+      <!-- Flask cap -->
+      <path d="M125,15 C125,5 75,5 75,15 C75,25 85,40 85,40 L115,40 C115,40 125,25 125,15 Z" 
+          fill="url(#flask-glass)" stroke="#5E2D9A" stroke-width="5" />
+      
+      <!-- Highlights/bubbles -->
+      <circle cx="140" cy="60" r="15" fill="white" opacity="0.4" />
+      <circle cx="160" cy="90" r="8" fill="white" opacity="0.3" />
+      
+      <!-- Small bubbles in liquid -->
+      <circle cx="60" cy="130" r="5" fill="white" opacity="0.3" />
+      <circle cx="85" cy="140" r="3" fill="white" opacity="0.25" />
+      <circle cx="110" cy="135" r="4" fill="white" opacity="0.3" />
+      <circle cx="130" cy="125" r="6" fill="white" opacity="0.25" />
+      <circle cx="70" cy="115" r="4" fill="white" opacity="0.2" />
     </svg>
   `
 };
@@ -183,12 +230,22 @@ function createErrorSvg(errorMessage) {
       <circle cx="1000" cy="120" r="70" fill="#5c1e1e" stroke="#ff6b6b" stroke-width="3"/>
       <text x="1000" y="140" font-size="80" text-anchor="middle" fill="#ff6b6b">!</text>
       
-      <!-- PAGE logo (small, at bottom) -->
-      <svg x="920" y="450" width="120" height="120" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-        <rect x="100" y="56" width="312" height="400" rx="32" ry="32" fill="#3c1212" stroke="#ff6b6b" stroke-width="12"/>
-        <text x="256" y="200" font-size="160" text-anchor="middle" fill="#ff6b6b" font-weight="bold">P</text>
-        <rect x="180" y="280" width="150" height="24" fill="#ff6b6b"/>
-        <rect x="180" y="340" width="100" height="24" fill="#ff6b6b"/>
+      <!-- Modified PAGE logo for error state (book with red elements) -->
+      <svg x="920" y="450" width="120" height="120" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+        <!-- Book/page body -->
+        <path d="M15,10 L75,5 C80,5 85,10 85,15 L85,85 C85,90 80,95 75,95 L15,90 C10,90 5,85 5,80 L5,20 C5,15 10,10 15,10 Z" 
+            fill="#3c1212" stroke="#ff6b6b" stroke-width="2"/>
+        
+        <!-- Page fold top-right corner -->
+        <path d="M75,5 L85,15 L75,15 L75,5 Z" fill="#4a1818" stroke="#ff6b6b" stroke-width="1.5"/>
+        
+        <!-- Red elements (PAGE logo elements) -->
+        <circle cx="45" cy="28" r="15" fill="#ff6b6b"/>
+        <rect x="30" y="42" width="30" height="6" fill="#ff6b6b"/>
+        <rect x="30" y="53" width="30" height="6" fill="#ff6b6b"/>
+        
+        <!-- Bookmark -->
+        <path d="M45,95 L45,120 L55,110 L65,120 L65,95" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="1.5"/>
       </svg>
       
       <!-- Footer -->
