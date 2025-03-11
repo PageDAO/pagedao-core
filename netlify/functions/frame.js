@@ -18,23 +18,122 @@ function isInitialButtonPress(body) {
          !body.untrustedData.state;
 }
 
-// Helper function to create overview SVG
+// Helper function to create overview SVG with improved visuals
 function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSupply) {
   return `
     <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
-      <rect width="1200" height="628" fill="#1e2d3a"/>
-      <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE Token Metrics</text>
-      <text x="100" y="180" font-size="36" fill="white">Average Price: ${avgPrice.toFixed(6)}</text>
-      <text x="100" y="250" font-size="36" fill="white">Market Cap: ${(marketCap).toLocaleString()}</text>
-      <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: ${(fdv).toLocaleString()}</text>
-      <text x="100" y="400" font-size="28" fill="#aaaaaa">Circulating Supply: ${circulatingSupply.toLocaleString()} PAGE</text>
-      <text x="100" y="450" font-size="28" fill="#aaaaaa">Total Supply: ${totalSupply.toLocaleString()} PAGE</text>
+      <!-- Background with subtle gradient -->
+      <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#1e2d3a;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#162330;stop-opacity:1" />
+        </linearGradient>
+        
+        <!-- Title gradient -->
+        <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#aaccff;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      
+      <rect width="1200" height="628" fill="url(#bgGradient)"/>
+      
+      <!-- Main title - Bigger and with gradient -->
+      <text x="100" y="110" font-size="64" fill="url(#titleGradient)" font-weight="bold">$PAGE Token Metrics</text>
+      
+      <!-- Key metrics section - Larger fonts -->
+      <text x="100" y="200" font-size="48" fill="white">Average Price: <tspan font-weight="bold" fill="#4dabf7">$${avgPrice.toFixed(6)}</tspan></text>
+      
+      <text x="100" y="280" font-size="48" fill="white">Market Cap: <tspan font-weight="bold" fill="#4dabf7">$${(marketCap).toLocaleString()}</tspan></text>
+      
+      <text x="100" y="360" font-size="48" fill="white">Fully Diluted Value: <tspan font-weight="bold" fill="#4dabf7">$${(fdv).toLocaleString()}</tspan></text>
+      
+      <!-- Supply information - Still important but visually secondary -->
+      <text x="100" y="440" font-size="36" fill="#dddddd">Circulating Supply: <tspan fill="#a5d8ff">${circulatingSupply.toLocaleString()} PAGE</tspan></text>
+      
+      <text x="100" y="500" font-size="36" fill="#dddddd">Total Supply: <tspan fill="#a5d8ff">${totalSupply.toLocaleString()} PAGE</tspan></text>
+      
+      <!-- PAGE token icon/badge -->
+      <circle cx="1000" cy="120" r="70" fill="#2a3f55" stroke="#4dabf7" stroke-width="3"/>
+      <text x="1000" y="140" font-size="50" text-anchor="middle" fill="white">PAGE</text>
+      
+      <!-- Footer with timestamp -->
+      <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
+      
+      <!-- PageDAO branding -->
+      <text x="1050" y="580" font-size="24" font-weight="bold" fill="#aaaaaa">PageDAO</text>
+    </svg>
+  `;
+}
+
+// Function to create chain-specific SVG with improved visuals
+function createChainDetailSvg(chainName, price, tvl) {
+  return `
+    <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#1e2d3a;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#162330;stop-opacity:1" />
+        </linearGradient>
+        
+        <!-- Title gradient -->
+        <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#aaccff;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      
+      <rect width="1200" height="628" fill="url(#bgGradient)"/>
+      
+      <!-- Title - Bigger and with subtle gradient -->
+      <text x="100" y="120" font-size="64" font-weight="bold" fill="url(#titleGradient)">$PAGE on ${chainName}</text>
+      
+      <!-- Price - Larger and more prominent -->
+      <text x="100" y="220" font-size="54" fill="white">Price: <tspan font-weight="bold" fill="#4dabf7">$${price.toFixed(6)}</tspan></text>
+      
+      <!-- TVL - Larger with better contrast -->
+      <text x="100" y="320" font-size="54" fill="white">TVL: <tspan font-weight="bold" fill="#4dabf7">${tvl}</tspan></text>
+      
+      <!-- Chain-specific icon/badge -->
+      <circle cx="1000" cy="120" r="70" fill="#2a3f55" stroke="#4dabf7" stroke-width="3"/>
+      <text x="1000" y="140" font-size="50" text-anchor="middle" fill="white">${chainName.substring(0, 3).toUpperCase()}</text>
+      
+      <!-- Footer with timestamp -->
+      <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
+      
+      <!-- PageDAO branding -->
+      <text x="1050" y="580" font-size="24" font-weight="bold" fill="#aaaaaa">PageDAO</text>
+    </svg>
+  `;
+}
+
+// Error SVG with improved visuals
+function createErrorSvg(errorMessage) {
+  return `
+    <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="errorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#5c1e1e;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#3c1212;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      
+      <rect width="1200" height="628" fill="url(#errorGradient)"/>
+      <text x="100" y="120" font-size="64" fill="white" font-weight="bold">Error Fetching $PAGE Prices</text>
+      <text x="100" y="220" font-size="48" fill="#eeeeee">Please try again later</text>
+      <text x="100" y="320" font-size="32" fill="#dddddd">${errorMessage || 'Connection error'}</text>
+      
+      <!-- Warning icon -->
+      <circle cx="1000" cy="120" r="70" fill="#5c1e1e" stroke="#ff6b6b" stroke-width="3"/>
+      <text x="1000" y="140" font-size="80" text-anchor="middle" fill="#ff6b6b">!</text>
+      
+      <!-- Footer -->
       <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
     </svg>
   `;
 }
 
-// Modified portion of the frame.js file
 exports.handler = async function(event) {
   try {
     // Check if this is initial load or button interaction
@@ -99,7 +198,7 @@ exports.handler = async function(event) {
           };
         }
         
-        // Handle initial "Show Prices" button press (button 1 from the main screen)
+        // Handle initial "Show Prices" button press
         else if (buttonPressed === 1 && isInitialButtonPress(body)) {
           const svg = createOverviewSvg(avgPrice, marketCap, fdv, CIRCULATING_SUPPLY, TOTAL_SUPPLY);
           
@@ -196,15 +295,8 @@ exports.handler = async function(event) {
             tvl = "Error calculating TVL";
           }
           
-          const svg = `
-            <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
-              <rect width="1200" height="628" fill="#1e2d3a"/>
-              <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE on ${chainName}</text>
-              <text x="100" y="180" font-size="36" fill="white">Price: $${price.toFixed(6)}</text>
-              <text x="100" y="260" font-size="36" fill="white">TVL: ${tvl}</text>
-              <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
-            </svg>
-          `;
+          // Use the enhanced chain detail SVG
+          const svg = createChainDetailSvg(chainName, price, tvl);
           
           // Encode SVG to data URI
           const svgBase64 = Buffer.from(svg).toString('base64');
@@ -234,15 +326,8 @@ exports.handler = async function(event) {
         }
       } catch (error) {
         console.error('Error processing button press:', error);
-        // Generate error SVG for button press errors
-        const svg = `
-          <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
-            <rect width="1200" height="628" fill="#5c1e1e"/>
-            <text x="100" y="100" font-size="48" fill="white" font-weight="bold">Error Fetching $PAGE Prices</text>
-            <text x="100" y="180" font-size="36" fill="white">Please try again later</text>
-            <text x="100" y="240" font-size="24" fill="#dddddd">${error.message}</text>
-          </svg>
-        `;
+        // Generate error SVG for button press errors using the enhanced error SVG
+        const svg = createErrorSvg(error.message);
         
         // Encode SVG to data URI
         const svgBase64 = Buffer.from(svg).toString('base64');
@@ -250,7 +335,7 @@ exports.handler = async function(event) {
       }
     }
     
-    // Initial frame or error recovery - THIS IS THE KEY PART TO FIX
+    // Initial frame or error recovery - FIXED to maintain the three original buttons
     return {
       statusCode: 200,
       headers: {"Content-Type": "text/html"},
@@ -277,15 +362,8 @@ exports.handler = async function(event) {
   } catch (error) {
     console.error('Unhandled error in frame handler:', error);
     
-    // Generate error SVG for catastrophic errors
-    const errorSvg = `
-      <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
-        <rect width="1200" height="628" fill="#5c1e1e"/>
-        <text x="100" y="100" font-size="48" fill="white" font-weight="bold">Service Temporarily Unavailable</text>
-        <text x="100" y="180" font-size="36" fill="white">We're experiencing technical difficulties</text>
-        <text x="100" y="240" font-size="24" fill="#dddddd">Please try again later</text>
-      </svg>
-    `;
+    // Generate error SVG for catastrophic errors using the enhanced error SVG
+    const errorSvg = createErrorSvg("Service Temporarily Unavailable");
     
     // Get host for error recovery
     const host = process.env.URL || 'https://pagetokenprices.netlify.app';
