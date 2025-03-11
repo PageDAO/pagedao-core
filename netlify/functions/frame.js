@@ -1,6 +1,32 @@
 const { fetchPagePrices, getPoolReserves, fetchOsmosisTVL } = require('./utils/tokenServices');
 const { PAGE_TOKEN_CONFIG } = require('./utils/tokenConfig');
 
+// Helper function to check if user is on a chain-specific view
+function isUserOnChainView(body) {
+  // If we have a state parameter or previous url with "Back to Overview" button, 
+  // the user is on a chain view
+  return body.untrustedData?.state && 
+         body.untrustedData.state.includes('chain') ||
+         body.untrustedData?.url && 
+         body.untrustedData.url.includes('Back%20to%20Overview');
+}
+
+// Helper function to create overview SVG
+function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSupply) {
+  return `
+    <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="628" fill="#1e2d3a"/>
+      <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE Token Metrics</text>
+      <text x="100" y="180" font-size="36" fill="white">Average Price: ${avgPrice.toFixed(6)}</text>
+      <text x="100" y="250" font-size="36" fill="white">Market Cap: ${(marketCap).toLocaleString()}</text>
+      <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: ${(fdv).toLocaleString()}</text>
+      <text x="100" y="400" font-size="28" fill="#aaaaaa">Circulating Supply: ${circulatingSupply.toLocaleString()} PAGE</text>
+      <text x="100" y="450" font-size="28" fill="#aaaaaa">Total Supply: ${totalSupply.toLocaleString()} PAGE</text>
+      <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
+    </svg>
+  `;
+}
+
 exports.handler = async function(event) {
   try {
     // Check if this is initial load or button interaction
@@ -35,20 +61,39 @@ exports.handler = async function(event) {
         const marketCap = avgPrice * CIRCULATING_SUPPLY;
         const fdv = avgPrice * TOTAL_SUPPLY;
         
-        // If user clicked "Show Overview"
-        if (buttonPressed === 1) {
-          const svg = `
-            <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
-              <rect width="1200" height="628" fill="#1e2d3a"/>
-              <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE Token Metrics</text>
-              <text x="100" y="180" font-size="36" fill="white">Average Price: $${avgPrice.toFixed(6)}</text>
-              <text x="100" y="250" font-size="36" fill="white">Market Cap: $${(marketCap).toLocaleString()}</text>
-              <text x="100" y="320" font-size="36" fill="white">Fully Diluted Value: $${(fdv).toLocaleString()}</text>
-              <text x="100" y="400" font-size="28" fill="#aaaaaa">Circulating Supply: ${CIRCULATING_SUPPLY.toLocaleString()} PAGE</text>
-              <text x="100" y="450" font-size="28" fill="#aaaaaa">Total Supply: ${TOTAL_SUPPLY.toLocaleString()} PAGE</text>
-              <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
-            </svg>
-          `;
+        // Handle main menu button press or return from chain view
+        if (buttonPressed === 1 && isUserOnChainView(body)) {
+          // Back to overview - if user pressed "Back to Overview" when viewing a chain
+          const svg = createOverviewSvg(avgPrice, marketCap, fdv, CIRCULATING_SUPPLY, TOTAL_SUPPLY);
+          const svgBase64 = Buffer.from(svg).toString('base64');
+          imageUrl = `data:image/svg+xml;base64,${svgBase64}`;
+          
+          return {
+            statusCode: 200,
+            headers: {"Content-Type": "text/html"},
+            body: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta property="fc:frame" content="vNext" />
+              <meta property="fc:frame:image" content="${imageUrl}" />
+              <meta property="fc:frame:button:1" content="Ethereum" />
+              <meta property="fc:frame:button:2" content="Optimism" />
+              <meta property="fc:frame:button:3" content="Base" />
+              <meta property="fc:frame:button:4" content="Osmosis" />
+              <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+              <meta property="fc:frame:state" content="overview" />
+              <title>PAGE Token Metrics</title>
+            </head>
+            <body></body>
+            </html>
+            `
+          };
+        }
+        
+        // From the initial screen, if user clicked "Show Overview"
+        if (buttonPressed === 1 && !isUserOnChainView(body)) {
+          const svg = createOverviewSvg(avgPrice, marketCap, fdv, CIRCULATING_SUPPLY, TOTAL_SUPPLY);
           
           // Encode SVG to data URI
           const svgBase64 = Buffer.from(svg).toString('base64');
@@ -77,32 +122,32 @@ exports.handler = async function(event) {
         }
         
         // Handle venue-specific buttons
-        if ([2, 3, 4, 5].includes(buttonPressed)) {
+        if ([1, 2, 3, 4].includes(buttonPressed)) {
           let chain = "ethereum";
           let price = 0;
           let dexUrl = "";
           let chainName = "";
           
           switch(buttonPressed) {
-            case 2: // Ethereum
+            case 1: // Ethereum
               chain = "ethereum";
               price = priceData.ethereum;
               chainName = "Ethereum";
               dexUrl = PAGE_TOKEN_CONFIG[0].dexUrl;
               break;
-            case 3: // Optimism
+            case 2: // Optimism
               chain = "optimism";
               price = priceData.optimism;
               chainName = "Optimism";
               dexUrl = PAGE_TOKEN_CONFIG[1].dexUrl;
               break;
-            case 4: // Base
+            case 3: // Base
               chain = "base";
               price = priceData.base;
               chainName = "Base";
               dexUrl = PAGE_TOKEN_CONFIG[2].dexUrl;
               break;
-            case 5: // Osmosis
+            case 4: // Osmosis
               chain = "osmosis";
               price = priceData.osmosis;
               chainName = "Osmosis";
@@ -176,6 +221,7 @@ exports.handler = async function(event) {
               <meta property="fc:frame:button:2:action" content="link" />
               <meta property="fc:frame:button:2:target" content="${dexUrl}" />
               <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+              <meta property="fc:frame:state" content="chain_${chain}" />
               <title>PAGE Token on ${chainName}</title>
             </head>
             <body></body>
