@@ -24,10 +24,7 @@ exports.handler = async function(event) {
         // Fetch latest prices
         const priceData = await fetchPagePrices();
         console.log("Fetched prices:", priceData);
-        
-        // Try two approaches for displaying dynamic content:
-        
-        // APPROACH 1: Data URI with SVG (should work with most validators)
+  
         const svg = `
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
@@ -46,9 +43,6 @@ exports.handler = async function(event) {
         // Encode SVG to data URI
         const svgBase64 = Buffer.from(svg).toString('base64');
         imageUrl = `data:image/svg+xml;base64,${svgBase64}`;
-        
-        // APPROACH 2 (fallback): If you prefer, you could also try using a service like Mage:
-        // const fallbackUrl = `https://api.mage.space/v0/generate/txt2img?p=%7B%22prompt%22:%22PAGE%20Token%20Prices:%20ETH:${priceData.ethereum.toFixed(4)},%20OPT:${priceData.optimism.toFixed(4)},%20BASE:${priceData.base.toFixed(4)},%20OSMO:${priceData.osmosis.toFixed(4)}%22%7D`;
         
         return {
           statusCode: 200,
@@ -84,32 +78,30 @@ exports.handler = async function(event) {
   // Default return for initial load or errors
   const basePageToken = PAGE_TOKEN_CONFIG.find(token => token.chainId === 8453);
   const uniswapUrl = basePageToken.dexUrl;
-
   return {
     statusCode: 200,
     headers: {"Content-Type": "text/html"},
     body: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta property="fc:frame" content="vNext" />
-        <meta property="fc:frame:image" content="${imageUrl}" />
-        <meta property="fc:frame:button:1" content="Trade $PAGE on Base" />
-        <meta property="fc:frame:button:1:action" content="link" />
-        <meta property="fc:frame:button:1:target" content="${uniswapUrl}" />
-        <meta property="fc:frame:button:2" content="Visit PageDAO.org" />
-        <meta property="fc:frame:button:3" content="Join PAGE Channel" />
-        <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
-        <meta property="fc:frame:button:2:action" content="link" />
-        <meta property="fc:frame:button:2:target" content="https://pagedao.org" />
-        <meta property="fc:frame:button:3:action" content="link" />
-        <meta property="fc:frame:button:3:target" content="https://warpcast.com/~/channel/page" />
-        <title>PAGE Token Prices</title>
-      </head>
-      <body>
-        <h1>PAGE Token Prices</h1>
-      </body>
-      </html>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta property="fc:frame" content="vNext" />
+      <meta property="fc:frame:image" content="${imageUrl}" />
+      <meta property="fc:frame:button:1" content="Refresh Prices" />
+      <meta property="fc:frame:button:2" content="Trade $PAGE on Base" />
+      <meta property="fc:frame:button:3" content="Visit PageDAO.org" />
+      <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+      <meta property="fc:frame:button:2:action" content="link" />
+      <meta property="fc:frame:button:2:target" content="${uniswapUrl}" />
+      <meta property="fc:frame:button:3:action" content="link" />
+      <meta property="fc:frame:button:3:target" content="https://pagedao.org" />
+      <title>PAGE Token Prices</title>
+    </head>
+    <body>
+      <h1>PAGE Token Prices</h1>
+    </body>
+    </html>
     `
-  };
+  }
+  
 };
