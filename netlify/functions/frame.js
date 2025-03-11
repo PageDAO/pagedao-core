@@ -106,7 +106,7 @@ function createChainDetailSvg(chainName, price, tvl) {
     `;
   }
   else if (chainName.toUpperCase() === 'OPTIMISM') logoPath = '/optimismlogo.jpeg';
-  else if (chainName.toUpperCase() === 'BASE') logoPath = '/base logo.jpeg';
+  else if (chainName.toUpperCase() === 'BASE') logoPath = '/baselogo.jpeg';
   else if (chainName.toUpperCase() === 'OSMOSIS') logoPath = '/osmosis-osmo-logo.png';
 
   return `
