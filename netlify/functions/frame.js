@@ -11,6 +11,13 @@ function isUserOnChainView(body) {
          body.untrustedData.url.includes('Back%20to%20Overview');
 }
 
+// Helper function to check if this is the initial screen button press
+function isInitialButtonPress(body) {
+  return body.untrustedData?.url && 
+         !body.untrustedData.url.includes('Back%20to%20Overview') && 
+         !body.untrustedData.state;
+}
+
 // Helper function to create overview SVG
 function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSupply) {
   return `
@@ -60,10 +67,10 @@ exports.handler = async function(event) {
         // Calculate market cap and FDV based on average price
         const marketCap = avgPrice * CIRCULATING_SUPPLY;
         const fdv = avgPrice * TOTAL_SUPPLY;
-        
-        // Handle main menu button press or return from chain view
+
+        // Handle "Back to Overview" button from a chain-specific view
         if (buttonPressed === 1 && isUserOnChainView(body)) {
-          // Back to overview - if user pressed "Back to Overview" when viewing a chain
+          // User pressed "Back to Overview" when viewing a chain
           const svg = createOverviewSvg(avgPrice, marketCap, fdv, CIRCULATING_SUPPLY, TOTAL_SUPPLY);
           const svgBase64 = Buffer.from(svg).toString('base64');
           imageUrl = `data:image/svg+xml;base64,${svgBase64}`;
@@ -91,8 +98,8 @@ exports.handler = async function(event) {
           };
         }
         
-        // From the initial screen, if user clicked "Show Overview"
-        if (buttonPressed === 1 && !isUserOnChainView(body)) {
+        // Handle initial "Show Overview" button press
+        else if (buttonPressed === 1 && isInitialButtonPress(body)) {
           const svg = createOverviewSvg(avgPrice, marketCap, fdv, CIRCULATING_SUPPLY, TOTAL_SUPPLY);
           
           // Encode SVG to data URI
@@ -113,6 +120,7 @@ exports.handler = async function(event) {
               <meta property="fc:frame:button:3" content="Base" />
               <meta property="fc:frame:button:4" content="Osmosis" />
               <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+              <meta property="fc:frame:state" content="overview" />
               <title>PAGE Token Metrics</title>
             </head>
             <body></body>
@@ -121,8 +129,8 @@ exports.handler = async function(event) {
           };
         }
         
-        // Handle venue-specific buttons
-        if ([1, 2, 3, 4].includes(buttonPressed)) {
+        // Handle chain-specific button presses from the overview screen
+        else if ([1, 2, 3, 4].includes(buttonPressed) && !isUserOnChainView(body)) {
           let chain = "ethereum";
           let price = 0;
           let dexUrl = "";
@@ -154,10 +162,6 @@ exports.handler = async function(event) {
               dexUrl = "https://app.osmosis.zone/?from=USDC&to=PAGE";
               break;
           }
-          
-          // Calculate market cap and FDV for this specific venue
-          const venueMarketCap = price * CIRCULATING_SUPPLY;
-          const venueFdv = price * TOTAL_SUPPLY;
           
           // Get pool reserves data if available (for TVL)
           let tvl = "N/A";
@@ -196,9 +200,7 @@ exports.handler = async function(event) {
               <rect width="1200" height="628" fill="#1e2d3a"/>
               <text x="100" y="100" font-size="48" fill="white" font-weight="bold">$PAGE on ${chainName}</text>
               <text x="100" y="180" font-size="36" fill="white">Price: $${price.toFixed(6)}</text>
-              <text x="100" y="240" font-size="36" fill="white">Market Cap: $${venueMarketCap.toLocaleString()}</text>
-              <text x="100" y="300" font-size="36" fill="white">FDV: $${venueFdv.toLocaleString()}</text>
-              <text x="100" y="360" font-size="36" fill="white">TVL: ${tvl}</text>
+              <text x="100" y="260" font-size="36" fill="white">TVL: ${tvl}</text>
               <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
             </svg>
           `;
