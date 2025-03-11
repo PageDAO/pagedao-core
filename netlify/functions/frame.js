@@ -24,7 +24,6 @@ exports.handler = async function(event) {
         // Fetch latest prices
         const priceData = await fetchPagePrices();
         console.log("Fetched prices:", priceData);
-  
         const svg = `
           <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
             <rect width="1200" height="628" fill="#1e2d3a"/>
@@ -36,6 +35,11 @@ exports.handler = async function(event) {
             <text x="100" y="440" font-size="40" fill="white" font-weight="bold">Average: ${
               ((priceData.ethereum + priceData.optimism + priceData.base + priceData.osmosis) / 4).toFixed(6)
             }</text>
+            
+            <!-- Add a visual trading call-to-action -->
+            <rect x="100" y="480" width="500" height="60" fill="#0052ff" rx="10" />
+            <text x="350" y="522" font-size="32" fill="white" text-anchor="middle">Trade $PAGE on Base via Uniswap</text>
+            
             <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
           </svg>
         `;
@@ -53,19 +57,14 @@ exports.handler = async function(event) {
             <head>
               <meta property="fc:frame" content="vNext" />
               <meta property="fc:frame:image" content="${imageUrl}" />
-              <meta property="fc:frame:button:1" content="Refresh Prices" />
-              <meta property="fc:frame:button:2" content="Visit PageDAO.org" />
-              <meta property="fc:frame:button:3" content="Join PAGE Channel" />
+              <meta property="fc:frame:button:1" content="Trade Now" />
+              <meta property="fc:frame:button:1:action" content="link" />
+              <meta property="fc:frame:button:1:target" content="https://app.uniswap.org/#/swap?outputCurrency=0xc4730f86d1F86cE0712a7b17EE919Db7dEFad7FE&chain=base" />
+              <meta property="fc:frame:button:2" content="Refresh Prices" />
               <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
-              <meta property="fc:frame:button:2:action" content="link" />
-              <meta property="fc:frame:button:2:target" content="https://pagedao.org" />
-              <meta property="fc:frame:button:3:action" content="link" />
-              <meta property="fc:frame:button:3:target" content="https://warpcast.com/~/channel/page" />
               <title>PAGE Token Prices</title>
             </head>
-            <body>
-              <h1>PAGE Token Prices</h1>
-            </body>
+            <body></body>
             </html>
           `
         };
