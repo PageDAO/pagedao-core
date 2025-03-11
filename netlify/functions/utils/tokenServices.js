@@ -187,24 +187,27 @@ function calculatePagePrice(poolData, ethPrice) {
 }
 
 /**
- * Gets Osmosis pool data for PAGE/OSMO pool
- * Returns TVL and PAGE token amount
+ * Fetch Osmosis PAGE price
  */
-async function getOsmosisPoolData() {
+async function fetchOsmosisPrice() {
   try {
-    console.log('Fetching Osmosis pool data...');
+    console.log('Fetching Osmosis price...');
+    
     // Get PAGE/OSMO pool data
     const poolResponse = await axios.get(`${OSMOSIS_LCD}/osmosis/gamm/v1beta1/pools/${POOL_ID}`);
+    
     if (!poolResponse.data || !poolResponse.data.pool || !poolResponse.data.pool.pool_assets) {
       throw new Error('Invalid pool data structure');
     }
+    
     const assets = poolResponse.data.pool.pool_assets;
     
     // Find PAGE and OSMO in pool assets
-    const pageAsset = assets.find(asset =>
+    const pageAsset = assets.find(asset => 
       asset.token.denom === OSMOSIS_PAGE_DENOM
     );
-    const osmoAsset = assets.find(asset =>
+    
+    const osmoAsset = assets.find(asset => 
       asset.token.denom === 'uosmo'
     );
     
@@ -212,20 +215,24 @@ async function getOsmosisPoolData() {
       throw new Error('Could not identify tokens in pool');
     }
     
-    // Calculate token amounts
+    // Calculate PAGE price in OSMO
     const pageAmount = Number(pageAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.PAGE);
     const osmoAmount = Number(osmoAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.OSMO);
     
-    // Get OSMO/USDC price for TVL calculation
+    // Get OSMO/USDC price
     const osmoUsdcResponse = await axios.get(`${OSMOSIS_LCD}/osmosis/gamm/v1beta1/pools/${OSMO_USDC_POOL_ID}`);
+    
     if (!osmoUsdcResponse.data || !osmoUsdcResponse.data.pool || !osmoUsdcResponse.data.pool.pool_assets) {
       throw new Error('Invalid OSMO/USDC pool data');
     }
+    
     const osmoUsdcAssets = osmoUsdcResponse.data.pool.pool_assets;
-    const osmoUsdcAsset = osmoUsdcAssets.find(asset =>
+    
+    const osmoUsdcAsset = osmoUsdcAssets.find(asset => 
       asset.token.denom === 'uosmo'
     );
-    const usdcAsset = osmoUsdcAssets.find(asset =>
+    
+    const usdcAsset = osmoUsdcAssets.find(asset => 
       asset.token.denom.includes(OSMO_USDC_DENOM)
     );
     
@@ -235,32 +242,19 @@ async function getOsmosisPoolData() {
     
     const osmoAmountUsdcPool = Number(osmoUsdcAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.OSMO);
     const usdcAmount = Number(usdcAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.USDC);
+    
     const osmoUsdPrice = usdcAmount / osmoAmountUsdcPool;
     
-    // Calculate TVL (PAGE value + OSMO value in USD)
-    const pagePrice = (osmoAmount * osmoUsdPrice) / pageAmount;
-    const pageValueUsd = pageAmount * pagePrice;
-    const osmoValueUsd = osmoAmount * osmoUsdPrice;
-    const totalTvl = pageValueUsd + osmoValueUsd;
+    // Calculate PAGE price in USD
+    const pageUsdPrice = (osmoAmount * osmoUsdPrice) / pageAmount;
     
-    return {
-      pageAmount,
-      osmoAmount,
-      tvl: totalTvl,
-      pagePrice
-    };
+    console.log('Calculated PAGE price on Osmosis:', pageUsdPrice);
+    return pageUsdPrice;
   } catch (error) {
-    console.error('Error fetching Osmosis pool data:', error);
-    throw error;
+    console.error('Error fetching Osmosis price:', error);
+    return priceCache.osmosis || 0.12; // Fallback price
   }
 }
-
-// Update the module exports to include the new function
-module.exports = {
-  fetchPagePrices,
-  getPoolReserves,
-  getOsmosisPoolData
-};
 
 /**
  * Get a provider for the specified chain with fallback to backup RPC
@@ -387,6 +381,5 @@ async function fetchBasePagePrice(ethPrice) {
   }
 }
 module.exports = {
-  fetchPagePrices,
-  getPoolReserves
+  fetchPagePrices
 };
