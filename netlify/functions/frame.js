@@ -1,4 +1,5 @@
 const { fetchPagePrices } = require('./utils/tokenServices');
+const { PAGE_TOKEN_CONFIG } = require('./utils/tokenConfig');
 
 exports.handler = async function(event) {
   // Check if this is initial load or button interaction
