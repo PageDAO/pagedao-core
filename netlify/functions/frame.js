@@ -34,6 +34,7 @@ function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSup
   `;
 }
 
+// Modified portion of the frame.js file
 exports.handler = async function(event) {
   try {
     // Check if this is initial load or button interaction
@@ -98,7 +99,7 @@ exports.handler = async function(event) {
           };
         }
         
-        // Handle initial "Show Overview" button press
+        // Handle initial "Show Prices" button press (button 1 from the main screen)
         else if (buttonPressed === 1 && isInitialButtonPress(body)) {
           const svg = createOverviewSvg(avgPrice, marketCap, fdv, CIRCULATING_SUPPLY, TOTAL_SUPPLY);
           
@@ -249,7 +250,7 @@ exports.handler = async function(event) {
       }
     }
     
-    // Initial frame or error recovery
+    // Initial frame or error recovery - THIS IS THE KEY PART TO FIX
     return {
       statusCode: 200,
       headers: {"Content-Type": "text/html"},
@@ -259,8 +260,14 @@ exports.handler = async function(event) {
       <head>
         <meta property="fc:frame" content="vNext" />
         <meta property="fc:frame:image" content="${imageUrl}" />
-        <meta property="fc:frame:button:1" content="Show Overview" />
+        <meta property="fc:frame:button:1" content="Show Prices" />
+        <meta property="fc:frame:button:2" content="Visit PageDAO.org" />
+        <meta property="fc:frame:button:3" content="Join PAGE Channel" />
         <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+        <meta property="fc:frame:button:2:action" content="link" />
+        <meta property="fc:frame:button:2:target" content="https://pagedao.org" />
+        <meta property="fc:frame:button:3:action" content="link" />
+        <meta property="fc:frame:button:3:target" content="https://warpcast.com/~/channel/page" />
         <title>PAGE Token Metrics</title>
       </head>
       <body></body>
