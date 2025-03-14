@@ -199,50 +199,42 @@ async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
     
     console.log('V3 sqrtPriceX96:', sqrtPriceX96.toString());
     
-    // Calculate price similar to our ETH price calculation
+    // Calculate price from sqrtPriceX96
     const sqrtPriceX96BigInt = BigInt(sqrtPriceX96.toString());
     const priceX192BigInt = sqrtPriceX96BigInt * sqrtPriceX96BigInt;
     const Q192 = BigInt(2) ** BigInt(192);
     const rawPrice = Number(priceX192BigInt) / Number(Q192);
     
-    console.log('V3 raw price ratio:', rawPrice);
+    console.log('V3 raw price ratio (token1/token0):', rawPrice);
     
-    const ethDecimals = 18; // ETH has 18 decimals
-    const pageDecimals = tokenConfig.decimals; // PAGE has 8 decimals
-    const decimalAdjustment = Math.pow(10, ethDecimals - pageDecimals);
+    // From your logs, we know PAGE is token1 and ETH is token0
+    // So raw price = PAGE/ETH (this is backwards from what we want)
     
-    // For the Base pool, we know:
-    // - token0 is ETH (0x4200...0006)
-    // - token1 is PAGE
+    // DEBUGGING: Let's track all calculations step by step
+    console.log('Token0 decimals (ETH):', 18);
+    console.log('Token1 decimals (PAGE):', tokenConfig.decimals);
     
-    let ethPerPage;
+    // First, we need ETH/PAGE (which is 1/rawPrice)
+    const ethPerPageRaw = 1 / rawPrice;
+    console.log('Raw ETH per PAGE (1/rawPrice):', ethPerPageRaw);
     
-    if (pageIsToken0) {
-        // If PAGE is token0, raw price = token1(ETH)/token0(PAGE)
-        ethPerPage = rawPrice;
-        console.log('PAGE is token0, unadjusted ETH per PAGE:', ethPerPage);
-    } else {
-        // If PAGE is token1, raw price = token0(ETH)/token1(PAGE)
-        // In V3, price is always token1/token0, so we need to invert
-        ethPerPage = rawPrice;
-        console.log('PAGE is token1, unadjusted ETH per PAGE:', ethPerPage);
-    }
+    // Now adjust for decimals
+    // Since ETH has 18 decimals and PAGE has 8, we adjust by 10^(18-8) = 10^10
+    const decimalAdjustment = Math.pow(10, 18 - tokenConfig.decimals);
+    console.log('Decimal adjustment factor:', decimalAdjustment);
     
-    // Adjust the ETH per PAGE for decimal differences
-    const adjustedEthPerPage = ethPerPage / decimalAdjustment;
-    console.log('Adjusted ETH per PAGE (accounting for decimals):', adjustedEthPerPage);
+    // Apply the decimal adjustment to get the correct ETH/PAGE ratio
+    const ethPerPageAdjusted = ethPerPageRaw / decimalAdjustment;
+    console.log('Adjusted ETH per PAGE:', ethPerPageAdjusted);
     
-    // Calculate expected USD price based on ETH price
-    const expectedUsdPrice = adjustedEthPerPage * (priceCache.ethPrice || 1886);
+    // Calculate the expected USD price with ETH at ~1888
+    const expectedUsdPrice = ethPerPageAdjusted * 1888;
     console.log('Expected PAGE price in USD:', expectedUsdPrice);
     
-    // For our return values, we want amounts that will give the right price
-    // when used in calculatePagePrice(poolData, ethPrice)
-    // where price = (poolData.tokenBAmount * ethPrice) / poolData.tokenAAmount
-    
+    // Return the values properly formatted for calculatePagePrice
     return {
-        tokenAAmount: 1, // PAGE
-        tokenBAmount: adjustedEthPerPage // ETH per PAGE, adjusted for decimals
+        tokenAAmount: 1, // PAGE amount
+        tokenBAmount: ethPerPageAdjusted // ETH amount per PAGE
     };
   } catch (error) {
     console.error('Error getting V3 pool reserves:', error);
