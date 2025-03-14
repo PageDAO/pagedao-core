@@ -261,35 +261,49 @@ exports.handler = async function(event) {
           
           // Get pool reserves data if available (for TVL)
           let tvl = "N/A";
-          try {
-            if (chain === "osmosis") {
-              // For Osmosis, use our dedicated TVL calculation
-              if (priceData.osmosisTVL) {
-                tvl = `$${priceData.osmosisTVL.toLocaleString()}`;
-              } else {
-                // If not in cache, fetch it directly
-                const osmosisTVL = await fetchOsmosisTVL();
-                tvl = `$${osmosisTVL.toLocaleString()}`;
-              }
-            } else {
-              // For EVM chains, use existing calculation
-              const tokenConfig = PAGE_TOKEN_CONFIG.find(config => 
-                (chain === "ethereum" && config.chainId === 1) ||
-                (chain === "optimism" && config.chainId === 10) ||
-                (chain === "base" && config.chainId === 8453)
-              );
-              
-              if (tokenConfig) {
-                const reserves = await getPoolReserves(tokenConfig.lpAddress, tokenConfig, chain);
-                const pageValueInPool = reserves.tokenAAmount * price;
-                const ethValue = reserves.tokenBAmount * priceData.ethPrice;
-                tvl = `$${(pageValueInPool + ethValue).toLocaleString()}`;
-              }
-            }
-          } catch (error) {
-            console.error(`Error getting TVL for ${chain}:`, error);
-            tvl = "Error calculating TVL";
-          }
+try {
+  if (chain === "osmosis") {
+    // For Osmosis, use our dedicated TVL calculation
+    if (priceData.osmosisTVL) {
+      tvl = `$${priceData.osmosisTVL.toLocaleString()}`;
+    } else {
+      // If not in cache, fetch it directly
+      const osmosisTVL = await fetchOsmosisTVL();
+      tvl = `$${osmosisTVL.toLocaleString()}`;
+    }
+  } else {
+    // For EVM chains, use existing calculation
+    const tokenConfig = PAGE_TOKEN_CONFIG.find(config => 
+      (chain === "ethereum" && config.chainId === 1) ||
+      (chain === "optimism" && config.chainId === 10) ||
+      (chain === "base" && config.chainId === 8453)
+    );
+    
+    if (tokenConfig) {
+      // REPLACE THIS PART with the following code:
+      if (chain === "base") {
+        // For Base, which uses V3 pool, use the V3-specific TVL calculation
+        const totalTVL = await getV3PoolTVL(
+          tokenConfig.lpAddress,
+          tokenConfig,
+          chain,
+          price, // PAGE price in USD
+          priceData.ethPrice // ETH price in USD
+        );
+        tvl = `$${totalTVL.toLocaleString()}`;
+      } else {
+        // For V2 pools (Ethereum and Optimism), use the existing calculation
+        const reserves = await getPoolReserves(tokenConfig.lpAddress, tokenConfig, chain);
+        const pageValueInPool = reserves.tokenAAmount * price;
+        const ethValue = reserves.tokenBAmount * priceData.ethPrice;
+        tvl = `$${(pageValueInPool + ethValue).toLocaleString()}`;
+      }
+    }
+  }
+} catch (error) {
+  console.error(`Error getting TVL for ${chain}:`, error);
+  tvl = "Error calculating TVL";
+}
           
           // Use the enhanced chain detail SVG
           const svg = createChainDetailSvg(chainName, price, tvl);
