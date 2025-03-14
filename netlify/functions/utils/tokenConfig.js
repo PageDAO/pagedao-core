@@ -26,7 +26,8 @@ const PAGE_TOKEN_CONFIG = [
     logoURI: '/images/page-token-logo.png',
     lpAddress: '0x9a25d21e204f10177738edb0c3345bd88478aaa2',
     dexUrl: 'https://app.uniswap.org/#/swap?outputCurrency=0x60e683C6514Edd5F758A55b6f393BeBBAfaA8d5e',
-    tokenIsToken0: true
+    tokenIsToken0: true,
+    poolType: 'v2'
   },
   {
     chainId: 10, // optimism
@@ -37,7 +38,8 @@ const PAGE_TOKEN_CONFIG = [
     logoURI: '/images/page-token-logo.png',
     lpAddress: '0x5421DA31D54640b58355d8D16D78af84D34D2405',
     dexUrl: 'https://app.uniswap.org/#/swap?outputCurrency=0xe67E77c47a37795c0ea40A038F7ab3d76492e803&chain=optimism',
-    tokenIsToken0: false
+    tokenIsToken0: false,
+    poolType: 'v2'
   },
   {
     chainId: 8453, // base
@@ -46,9 +48,15 @@ const PAGE_TOKEN_CONFIG = [
     symbol: 'PAGE',
     name: 'Page',
     logoURI: '/images/page-token-logo.png',
-    lpAddress: '0x7989DD74dF816A32EE0DaC0f3f8e24d740fc5cB2',
-    dexUrl: 'https://app.uniswap.org/#/swap?outputCurrency=0xc4730f86d1F86cE0712a7b17EE919Db7dEFad7FE&chain=base',
-    tokenIsToken0: false
+    // Update to the v3 pool address for the position
+    lpAddress: '0x90997650F5B5A254B4DdA0a012AE39ffEE145036',
+    dexUrl: 'https://app.uniswap.org/positions/v3/base/2376403',
+    tokenIsToken0: false,  // This needs to be verified for the v3 pool
+    poolType: 'v3',
+    // Added for v3 specifics
+    poolId: 2376403,
+    // For V3, we need to know the fee tier
+    feeTier: 10000 // 1% fee tier
   }
 ];
 
