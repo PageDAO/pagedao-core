@@ -587,5 +587,6 @@ async function fetchBasePagePrice(ethPrice) {
 module.exports = {
   fetchPagePrices,
   getPoolReserves,
-  fetchOsmosisTVL
+  fetchOsmosisTVL,
+  getV3PoolTVL
 };
