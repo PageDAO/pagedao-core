@@ -140,7 +140,7 @@ exports.handler = async function(event) {
     const host = process.env.URL || 'https://pagetokenprices.netlify.app';
     
     // Default image (IPFS-hosted static image)
-    let imageUrl = "https://pink-quiet-quelea-944.mypinata.cloud/ipfs/bafkreigyddi6zzsf2hkv7im4qtkvhkdvj5dvzs36xzotam7kvv7n6lksmu?pinataGatewayToken=NQ6fEH8plNGyNnOv1CjExntu8JtvIZvzUaX_g3zU12PMtovIWlpcaxnsTJrV29l-";
+    let imageUrl = "https://pink-quiet-quelea-944.mypinata.cloud/ipfs/bafkreieke4q76jvwymfectzeujkbt3maso2e4nkeh4ny6h7thmvfbdrtk4?pinataGatewayToken=NQ6fEH8plNGyNnOv1CjExntu8JtvIZvzUaX_g3zU12PMtovIWlpcaxnsTJrV29l-";
     
     // Circulation and total supply
     const CIRCULATING_SUPPLY = 42500000;
