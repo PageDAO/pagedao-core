@@ -1,14 +1,14 @@
 // Public RPC endpoints (no API keys needed)
 const RPC_URLS = {
   ethereum: 'https://ethereum.publicnode.com',
-  optimism: 'https://optimism.publicnode.com', 
+  optimism: 'https://mainnet.optimism.io', 
   base: 'https://mainnet.base.org'
 };
 
 // Backup RPC endpoints
 const BACKUP_RPC_URLS = {
   ethereum: 'https://eth.llamarpc.com',
-  optimism: 'https://mainnet.optimism.io',
+  optimism: 'https://optimism.llamarpc.com',
   base: 'https://base.publicnode.com'
 };
 
