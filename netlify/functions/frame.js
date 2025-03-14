@@ -298,27 +298,56 @@ exports.handler = async function(event) {
           const svgBase64 = Buffer.from(svg).toString('base64');
           imageUrl = `data:image/svg+xml;base64,${svgBase64}`;
           
-          return {
-            statusCode: 200,
-            headers: {"Content-Type": "text/html"},
-            body: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="${imageUrl}" />
-              <meta property="fc:frame:button:1" content="Back to Overview" />
-              <meta property="fc:frame:button:2" content="Trade on ${chainName}" />
-              <meta property="fc:frame:button:2:action" content="link" />
-              <meta property="fc:frame:button:2:target" content="${dexUrl}" />
-              <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
-              <meta property="fc:frame:state" content="chain_${chain}" />
-              <title>PAGE Token on ${chainName}</title>
-            </head>
-            <body></body>
-            </html>
-            `
-          };
+          // Modified to include a special Rebase button for Base chain
+          if (chain === "base") {
+            return {
+              statusCode: 200,
+              headers: {"Content-Type": "text/html"},
+              body: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta property="fc:frame" content="vNext" />
+                <meta property="fc:frame:image" content="${imageUrl}" />
+                <meta property="fc:frame:button:1" content="Back to Overview" />
+                <meta property="fc:frame:button:2" content="Trade on ${chainName}" />
+                <meta property="fc:frame:button:2:action" content="link" />
+                <meta property="fc:frame:button:2:target" content="${dexUrl}" />
+                <meta property="fc:frame:button:3" content="View on Rebase" />
+                <meta property="fc:frame:button:3:action" content="link" />
+                <meta property="fc:frame:button:3:target" content="https://www.rebase.finance/0xc4730f86d1F86cE0712a7b17EE919Db7dEFad7FE" />
+                <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+                <meta property="fc:frame:state" content="chain_${chain}" />
+                <title>PAGE Token on ${chainName}</title>
+              </head>
+              <body></body>
+              </html>
+              `
+            };
+          } else {
+            // Standard return for other chains
+            return {
+              statusCode: 200,
+              headers: {"Content-Type": "text/html"},
+              body: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta property="fc:frame" content="vNext" />
+                <meta property="fc:frame:image" content="${imageUrl}" />
+                <meta property="fc:frame:button:1" content="Back to Overview" />
+                <meta property="fc:frame:button:2" content="Trade on ${chainName}" />
+                <meta property="fc:frame:button:2:action" content="link" />
+                <meta property="fc:frame:button:2:target" content="${dexUrl}" />
+                <meta property="fc:frame:post_url" content="${host}/.netlify/functions/frame" />
+                <meta property="fc:frame:state" content="chain_${chain}" />
+                <title>PAGE Token on ${chainName}</title>
+              </head>
+              <body></body>
+              </html>
+              `
+            };
+          }
         }
       } catch (error) {
         console.error('Error processing button press:', error);
