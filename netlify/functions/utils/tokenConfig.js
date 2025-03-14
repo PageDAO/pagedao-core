@@ -1,6 +1,6 @@
 // Public RPC endpoints (no API keys needed)
 const RPC_URLS = {
-  ethereum: 'https://ethereum.publicnode.com',
+  ethereum: 'https://eth.drpc.org',
   optimism: 'https://mainnet.optimism.io', 
   base: 'https://mainnet.base.org'
 };
