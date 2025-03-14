@@ -259,8 +259,10 @@ exports.handler = async function(event) {
               break;
           }
           
-          // Get pool reserves data if available (for TVL)
-          let tvl = "N/A";
+
+
+// Get pool reserves data if available (for TVL)
+let tvl = "N/A";
 try {
   if (chain === "osmosis") {
     // For Osmosis, use our dedicated TVL calculation
@@ -280,7 +282,6 @@ try {
     );
     
     if (tokenConfig) {
-      // REPLACE THIS PART with the following code:
       if (chain === "base") {
         // For Base, which uses V3 pool, use the V3-specific TVL calculation
         const totalTVL = await getV3PoolTVL(
