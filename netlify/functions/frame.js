@@ -42,7 +42,7 @@ function createOverviewSvg(avgPrice, marketCap, fdv, circulatingSupply, totalSup
       <text x="960" y="90" font-size="28" text-anchor="middle" fill="white" font-weight="bold">Available Networks</text>
       <text x="960" y="130" font-size="24" text-anchor="middle" fill="#4dabf7">Ethereum Mainnet</text>
       <text x="960" y="160" font-size="24" text-anchor="middle" fill="#FF0420">Optimism Mainnet</text>
-      <text x="960" y="190" font-size="24" text-anchor="middle" fill="#0052FF">Base Mainnet</text>
+      <text x="960" y="190" font-size="24" text-anchor="middle" fill="#0052FF">Base Mainnet (v3)</text>
       <text x="960" y="220" font-size="24" text-anchor="middle" fill="#5E12A0">Osmosis Mainnet</text>
       
       <!-- Footer with timestamp -->
@@ -56,23 +56,30 @@ function createChainDetailSvg(chainName, price, tvl) {
   // Get chain-specific styling
   let chainColor = "#4dabf7"; // Default blue
   let fullNetworkName = "Ethereum Mainnet";
+  let poolVersion = "";
   
   if (chainName.toUpperCase() === 'ETHEREUM') {
     chainColor = "#6F7CBA";
     fullNetworkName = "Ethereum Mainnet";
+    poolVersion = "v2";
   }
   else if (chainName.toUpperCase() === 'OPTIMISM') {
     chainColor = "#FF0420";
     fullNetworkName = "Optimism Mainnet";
+    poolVersion = "v2";
   }
   else if (chainName.toUpperCase() === 'BASE') {
     chainColor = "#0052FF";
     fullNetworkName = "Base Mainnet";
+    poolVersion = "v3";
   }
   else if (chainName.toUpperCase() === 'OSMOSIS') {
     chainColor = "#5E12A0";
     fullNetworkName = "Osmosis Mainnet";
   }
+
+  // Add pool version display if it exists
+  const versionText = poolVersion ? ` (${poolVersion})` : '';
 
   return `
     <svg width="1200" height="628" xmlns="http://www.w3.org/2000/svg">
@@ -84,13 +91,19 @@ function createChainDetailSvg(chainName, price, tvl) {
       
       <!-- Network Name -->
       <rect x="800" y="40" width="320" height="80" rx="10" fill="${chainColor}"/>
-      <text x="960" y="90" font-size="28" text-anchor="middle" fill="white" font-weight="bold">${fullNetworkName}</text>
+      <text x="960" y="90" font-size="28" text-anchor="middle" fill="white" font-weight="bold">${fullNetworkName}${versionText}</text>
       
       <!-- Price -->
       <text x="100" y="220" font-size="54" fill="white">Price: <tspan font-weight="bold" fill="${chainColor}">$${price.toFixed(6)}</tspan></text>
       
       <!-- TVL -->
       <text x="100" y="320" font-size="54" fill="white">TVL: <tspan font-weight="bold" fill="${chainColor}">${tvl}</tspan></text>
+      
+      <!-- Pool Info (for v3) -->
+      ${poolVersion === 'v3' ? `
+      <rect x="100" y="380" width="500" height="80" rx="10" fill="#233240"/>
+      <text x="120" y="430" font-size="28" fill="#dddddd">Pool ID: <tspan font-weight="bold" fill="#dddddd">2376403</tspan></text>
+      ` : ''}
       
       <!-- Footer with timestamp -->
       <text x="100" y="580" font-size="24" fill="#aaaaaa">Last Updated: ${new Date().toLocaleString()}</text>
