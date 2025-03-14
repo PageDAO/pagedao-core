@@ -175,6 +175,9 @@ async function getV2PoolReserves(lpAddress, tokenConfig, provider) {
 /**
  * Get pool data from a Uniswap V3 pool
  */
+/**
+ * Get pool data from a Uniswap V3 pool
+ */
 async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
   try {
     console.log(`Fetching V3 pool data for ${lpAddress}...`);
@@ -199,50 +202,48 @@ async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
     
     console.log('V3 sqrtPriceX96:', sqrtPriceX96.toString());
     
-    // Calculate price similar to our ETH price calculation
+    // Calculate price from sqrtPriceX96
     const sqrtPriceX96BigInt = BigInt(sqrtPriceX96.toString());
     const priceX192BigInt = sqrtPriceX96BigInt * sqrtPriceX96BigInt;
     const Q192 = BigInt(2) ** BigInt(192);
-    const rawPrice = Number(priceX192BigInt) / Number(Q192);
+    let price = Number(priceX192BigInt) / Number(Q192);
     
-    console.log('V3 raw price ratio:', rawPrice);
+    console.log('V3 raw price ratio:', price);
     
-    // Since V3 doesn't have simple reserves like V2, we need to estimate the amount
-    // based on the price and liquidity in the pool
+    // In Uniswap V3:
+    // - If token0 is PAGE, price = token1/token0 = ETH/PAGE
+    // - If token1 is PAGE, price = token0/token1 = ETH/PAGE
     
-    // We'll use the current price to estimate the relative amounts of tokens
-    let priceToken0Token1 = rawPrice;
+    // Adjust for decimal differences
+    const ethDecimals = 18; // ETH always has 18 decimals
+    const pageDecimals = tokenConfig.decimals; // PAGE has 8 decimals according to config
     
-    // We need to adjust for decimal differences between tokens
+    // Apply decimal adjustment
+    const decimalAdjustment = Math.pow(10, pageDecimals - ethDecimals);
+    
     if (pageIsToken0) {
-      // If PAGE is token0, price is amount of token1 (ETH) per token0 (PAGE)
-      const decimalAdjustment = Math.pow(10, tokenConfig.decimals - 18); // ETH has 18 decimals
-      priceToken0Token1 = priceToken0Token1 * decimalAdjustment;
-      
-      // For our return values, if PAGE is token0, we estimate the amounts
-      // Let's say we have 1 unit of PAGE, then we'd have priceToken0Token1 units of ETH
-      const pageAmount = 1;
-      const ethAmount = priceToken0Token1;
-      
-      return {
-        tokenAAmount: pageAmount,
-        tokenBAmount: ethAmount
-      };
+      // If PAGE is token0, we need to invert the price
+      price = 1 / price;
+      // And adjust for decimals differences
+      price = price * Math.pow(10, ethDecimals - pageDecimals);
     } else {
-      // If PAGE is token1, price is amount of token0 (ETH) per token1 (PAGE)
-      const decimalAdjustment = Math.pow(10, 18 - tokenConfig.decimals); // ETH has 18 decimals
-      priceToken0Token1 = priceToken0Token1 * decimalAdjustment;
-      
-      // For our return values, if PAGE is token1, we estimate the amounts
-      // Let's say we have 1 unit of ETH, then we'd have 1/priceToken0Token1 units of PAGE
-      const ethAmount = 1;
-      const pageAmount = 1 / priceToken0Token1;
-      
-      return {
-        tokenAAmount: pageAmount,
-        tokenBAmount: ethAmount
-      };
+      // If PAGE is token1, price is already ETH/PAGE, but need decimal adjustment
+      price = price * Math.pow(10, pageDecimals - ethDecimals);
     }
+    
+    console.log('Adjusted price after decimal normalization:', price);
+    
+    // For our estimation, use this price to derive the relative amounts
+    // Since we're only interested in the ratio for price calculation,
+    // we can use simplified amounts
+    
+    const pageAmount = 1;
+    const ethAmount = price; // This gives us the equivalent ETH per 1 PAGE
+    
+    return {
+      tokenAAmount: pageAmount, // PAGE
+      tokenBAmount: ethAmount   // ETH
+    };
   } catch (error) {
     console.error('Error getting V3 pool reserves:', error);
     throw error;
