@@ -173,7 +173,7 @@ async function getV2PoolReserves(lpAddress, tokenConfig, provider) {
 }
 
 /**
- * Get pool data from a Uniswap V3 pool
+ * Get pool data from a Uniswap V3 pool with correct decimal handling
  */
 async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
   try {
@@ -207,40 +207,42 @@ async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
     
     console.log('V3 raw price ratio:', rawPrice);
     
-    // For Base pool, token0 is ETH (0x4200...0006) and token1 is PAGE
-    // The raw price is token1/token0 = PAGE/ETH
-    // We need ETH/PAGE, so we invert it
+    const ethDecimals = 18; // ETH has 18 decimals
+    const pageDecimals = tokenConfig.decimals; // PAGE has 8 decimals
+    const decimalAdjustment = Math.pow(10, ethDecimals - pageDecimals);
     
-    let pageAmount, ethAmount;
+    // For the Base pool, we know:
+    // - token0 is ETH (0x4200...0006)
+    // - token1 is PAGE
+    
+    let ethPerPage;
     
     if (pageIsToken0) {
-        // PAGE is token0, price is token1/token0 (ETH/PAGE)
-        pageAmount = 1;
-        ethAmount = rawPrice;
-        
-        // No decimal adjustment needed as we're working with "relative amounts"
-        console.log('PAGE is token0, ETH amount per PAGE:', ethAmount);
+        // If PAGE is token0, raw price = token1(ETH)/token0(PAGE)
+        ethPerPage = rawPrice;
+        console.log('PAGE is token0, unadjusted ETH per PAGE:', ethPerPage);
     } else {
-        // PAGE is token1, price is token0/token1 (ETH/PAGE)
-        // Need to invert price for PAGE/ETH --> ETH/PAGE
-        const invertedPrice = 1 / rawPrice;
-        
-        pageAmount = 1;
-        ethAmount = invertedPrice;
-        
-        console.log('PAGE is token1, ETH amount per PAGE:', ethAmount);
+        // If PAGE is token1, raw price = token0(ETH)/token1(PAGE)
+        // In V3, price is always token1/token0, so we need to invert
+        ethPerPage = rawPrice;
+        console.log('PAGE is token1, unadjusted ETH per PAGE:', ethPerPage);
     }
     
-    // We're now using the direct ratio without decimal adjustments
-    // However, when we calculate the price in calculatePagePrice,
-    // we're doing: (ethAmount * ethPrice) / pageAmount
-    // For this calculation, we need the ethAmount to reflect the value in ETH
-    // The pool price already gives us the ratio between ETH and PAGE,
-    // which is what we need.
+    // Adjust the ETH per PAGE for decimal differences
+    const adjustedEthPerPage = ethPerPage / decimalAdjustment;
+    console.log('Adjusted ETH per PAGE (accounting for decimals):', adjustedEthPerPage);
+    
+    // Calculate expected USD price based on ETH price
+    const expectedUsdPrice = adjustedEthPerPage * (priceCache.ethPrice || 1886);
+    console.log('Expected PAGE price in USD:', expectedUsdPrice);
+    
+    // For our return values, we want amounts that will give the right price
+    // when used in calculatePagePrice(poolData, ethPrice)
+    // where price = (poolData.tokenBAmount * ethPrice) / poolData.tokenAAmount
     
     return {
-        tokenAAmount: pageAmount,
-        tokenBAmount: ethAmount
+        tokenAAmount: 1, // PAGE
+        tokenBAmount: adjustedEthPerPage // ETH per PAGE, adjusted for decimals
     };
   } catch (error) {
     console.error('Error getting V3 pool reserves:', error);
