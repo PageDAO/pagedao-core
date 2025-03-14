@@ -49,7 +49,7 @@ const PAGE_TOKEN_CONFIG = [
     name: 'Page',
     logoURI: '/images/page-token-logo.png',
     // Update to the v3 pool address for the position
-    lpAddress: '0x90997650F5B5A254B4DdA0a012AE39ffEE145036',
+    lpAddress: '0xb05113fbB5f2551Dc6f10EF3C4EfFB9C03C0E3E9',
     dexUrl: 'https://app.uniswap.org/positions/v3/base/2376403',
     tokenIsToken0: false,  // This needs to be verified for the v3 pool
     poolType: 'v3',
