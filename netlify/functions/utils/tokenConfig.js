@@ -2,7 +2,7 @@
 const RPC_URLS = {
   ethereum: 'https://ethereum.publicnode.com',
   optimism: 'https://optimism.publicnode.com', 
-  base: 'https://base.publicnode.com'  // Changed to the working backup URL
+  base: 'https://mainnet.base.org'
 };
 
 // Backup RPC endpoints
