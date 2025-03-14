@@ -8,42 +8,7 @@ const {
   CACHE_DURATION
 } = require('./tokenConfig');
 const { getProvider } = require('./web3');
-
-// Uniswap V2 Pair ABI (minimal for getting reserves)
-const UNISWAP_V2_PAIR_ABI = [
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "getReserves",
-    "outputs": [
-      { "internalType": "uint112", "name": "_reserve0", "type": "uint112" },
-      { "internalType": "uint112", "name": "_reserve1", "type": "uint112" },
-      { "internalType": "uint32", "name": "_blockTimestampLast", "type": "uint32" }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
-
-// Uniswap V3 Pool ABI (minimal for price calculation)
-const UNISWAP_V3_POOL_ABI = [
-  {
-    "inputs": [],
-    "name": "slot0",
-    "outputs": [
-      { "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160" },
-      { "internalType": "int24", "name": "tick", "type": "int24" },
-      { "internalType": "uint16", "name": "observationIndex", "type": "uint16" },
-      { "internalType": "uint16", "name": "observationCardinality", "type": "uint16" },
-      { "internalType": "uint16", "name": "observationCardinalityNext", "type": "uint16" },
-      { "internalType": "uint8", "name": "feeProtocol", "type": "uint8" },
-      { "internalType": "bool", "name": "unlocked", "type": "bool" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+const { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } = require('./abis');
 
 // Cache for prices
 let priceCache = {
@@ -161,6 +126,127 @@ async function fetchEthPrice() {
 function calculatePagePrice(poolData, ethPrice) {
   // PAGE price = ETH amount * ETH price / PAGE amount
   return (poolData.tokenBAmount * ethPrice) / poolData.tokenAAmount;
+}
+
+/**
+ * Get pool reserves for a Uniswap pool (v2 or v3)
+ */
+async function getPoolReserves(lpAddress, tokenConfig, chain) {
+  try {
+    const provider = getProvider(chain);
+    
+    // Different handling based on pool type
+    if (tokenConfig.poolType === 'v2') {
+      return await getV2PoolReserves(lpAddress, tokenConfig, provider);
+    } else if (tokenConfig.poolType === 'v3') {
+      return await getV3PoolReserves(lpAddress, tokenConfig, provider);
+    } else {
+      throw new Error(`Unsupported pool type: ${tokenConfig.poolType}`);
+    }
+  } catch (error) {
+    console.error(`Error getting pool reserves for ${chain}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get pool reserves for a Uniswap V2 pair
+ */
+async function getV2PoolReserves(lpAddress, tokenConfig, provider) {
+  const pairContract = new ethers.Contract(lpAddress, UNISWAP_V2_PAIR_ABI, provider);
+  
+  // Get reserves
+  const [reserve0, reserve1] = await pairContract.getReserves();
+  
+  // Determine which reserve is PAGE and which is ETH based on tokenIsToken0
+  const pageReserve = tokenConfig.tokenIsToken0 ? reserve0 : reserve1;
+  const ethReserve = tokenConfig.tokenIsToken0 ? reserve1 : reserve0;
+  
+  // Convert reserves to proper numeric values based on decimals
+  const pageAmount = Number(pageReserve) / Math.pow(10, tokenConfig.decimals);
+  const ethAmount = Number(ethReserve) / Math.pow(10, 18); // ETH has 18 decimals
+  
+  return {
+    tokenAAmount: pageAmount, // PAGE
+    tokenBAmount: ethAmount   // ETH
+  };
+}
+
+/**
+ * Get pool data from a Uniswap V3 pool
+ */
+async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
+  try {
+    console.log(`Fetching V3 pool data for ${lpAddress}...`);
+    const poolContract = new ethers.Contract(lpAddress, UNISWAP_V3_POOL_ABI, provider);
+    
+    // Get token addresses to determine which is PAGE
+    const token0Address = await poolContract.token0();
+    const token1Address = await poolContract.token1();
+    
+    console.log('V3 Pool token0:', token0Address);
+    console.log('V3 Pool token1:', token1Address);
+    console.log('PAGE token address:', tokenConfig.address);
+    
+    // Determine if PAGE is token0 or token1
+    const pageIsToken0 = token0Address.toLowerCase() === tokenConfig.address.toLowerCase();
+    
+    console.log('PAGE is token0:', pageIsToken0);
+    
+    // Get price information from slot0
+    const slot0 = await poolContract.slot0();
+    const sqrtPriceX96 = slot0.sqrtPriceX96;
+    
+    console.log('V3 sqrtPriceX96:', sqrtPriceX96.toString());
+    
+    // Calculate price similar to our ETH price calculation
+    const sqrtPriceX96BigInt = BigInt(sqrtPriceX96.toString());
+    const priceX192BigInt = sqrtPriceX96BigInt * sqrtPriceX96BigInt;
+    const Q192 = BigInt(2) ** BigInt(192);
+    const rawPrice = Number(priceX192BigInt) / Number(Q192);
+    
+    console.log('V3 raw price ratio:', rawPrice);
+    
+    // Since V3 doesn't have simple reserves like V2, we need to estimate the amount
+    // based on the price and liquidity in the pool
+    
+    // We'll use the current price to estimate the relative amounts of tokens
+    let priceToken0Token1 = rawPrice;
+    
+    // We need to adjust for decimal differences between tokens
+    if (pageIsToken0) {
+      // If PAGE is token0, price is amount of token1 (ETH) per token0 (PAGE)
+      const decimalAdjustment = Math.pow(10, tokenConfig.decimals - 18); // ETH has 18 decimals
+      priceToken0Token1 = priceToken0Token1 * decimalAdjustment;
+      
+      // For our return values, if PAGE is token0, we estimate the amounts
+      // Let's say we have 1 unit of PAGE, then we'd have priceToken0Token1 units of ETH
+      const pageAmount = 1;
+      const ethAmount = priceToken0Token1;
+      
+      return {
+        tokenAAmount: pageAmount,
+        tokenBAmount: ethAmount
+      };
+    } else {
+      // If PAGE is token1, price is amount of token0 (ETH) per token1 (PAGE)
+      const decimalAdjustment = Math.pow(10, 18 - tokenConfig.decimals); // ETH has 18 decimals
+      priceToken0Token1 = priceToken0Token1 * decimalAdjustment;
+      
+      // For our return values, if PAGE is token1, we estimate the amounts
+      // Let's say we have 1 unit of ETH, then we'd have 1/priceToken0Token1 units of PAGE
+      const ethAmount = 1;
+      const pageAmount = 1 / priceToken0Token1;
+      
+      return {
+        tokenAAmount: pageAmount,
+        tokenBAmount: ethAmount
+      };
+    }
+  } catch (error) {
+    console.error('Error getting V3 pool reserves:', error);
+    throw error;
+  }
 }
 
 /**
@@ -304,35 +390,6 @@ async function fetchOsmosisTVL() {
     return totalTvl;
   } catch (error) {
     console.error('Error fetching Osmosis TVL:', error);
-    throw error;
-  }
-}
-
-/**
- * Get pool reserves for a Uniswap V2-compatible pair
- */
-async function getPoolReserves(lpAddress, tokenConfig, chain) {
-  try {
-    const provider = getProvider(chain);
-    const pairContract = new ethers.Contract(lpAddress, UNISWAP_V2_PAIR_ABI, provider);
-    
-    // Get reserves
-    const [reserve0, reserve1] = await pairContract.getReserves();
-    
-    // Determine which reserve is PAGE and which is ETH based on tokenIsToken0
-    const pageReserve = tokenConfig.tokenIsToken0 ? reserve0 : reserve1;
-    const ethReserve = tokenConfig.tokenIsToken0 ? reserve1 : reserve0;
-    
-    // Convert reserves to proper numeric values based on decimals
-    const pageAmount = Number(pageReserve) / Math.pow(10, tokenConfig.decimals);
-    const ethAmount = Number(ethReserve) / Math.pow(10, 18); // ETH has 18 decimals
-    
-    return {
-      tokenAAmount: pageAmount, // PAGE
-      tokenBAmount: ethAmount   // ETH
-    };
-  } catch (error) {
-    console.error(`Error getting pool reserves for ${chain}:`, error);
     throw error;
   }
 }
