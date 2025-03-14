@@ -243,6 +243,100 @@ async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
 }
 
 /**
+ * Get TVL for a Uniswap V3 pool
+ * @param {string} poolAddress - Address of the V3 pool
+ * @param {object} tokenConfig - Token configuration
+ * @param {string} chain - Chain name
+ * @param {number} pagePrice - Current PAGE price in USD
+ * @param {number} ethPrice - Current ETH price in USD
+ * @returns {Promise<number>} - TVL in USD
+ */
+async function getV3PoolTVL(poolAddress, tokenConfig, chain, pagePrice, ethPrice) {
+  try {
+    console.log(`Fetching V3 pool TVL for ${poolAddress}...`);
+    const provider = getProvider(chain);
+    
+    // Extended ABI for V3 pool with liquidity function
+    const poolAbiExtended = [
+      ...UNISWAP_V3_POOL_ABI,
+      {
+        "inputs": [],
+        "name": "liquidity",
+        "outputs": [{ "internalType": "uint128", "name": "", "type": "uint128" }],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+    
+    const poolContract = new ethers.Contract(poolAddress, poolAbiExtended, provider);
+    
+    // Get current liquidity in the pool
+    const liquidity = await poolContract.liquidity();
+    console.log('Total V3 pool liquidity:', liquidity.toString());
+    
+    // Get slot0 for the current tick and price
+    const slot0 = await poolContract.slot0();
+    const currentTick = slot0.tick;
+    console.log('Current tick:', currentTick);
+    
+    // Get token addresses
+    const token0Address = await poolContract.token0();
+    const token1Address = await poolContract.token1();
+    
+    // Check if PAGE is token0 or token1
+    const pageIsToken0 = token0Address.toLowerCase() === tokenConfig.address.toLowerCase();
+    const PAGE_DECIMALS = tokenConfig.decimals;
+    const ETH_DECIMALS = 18; // ETH has 18 decimals
+    
+    // Calculate amounts from liquidity
+    // These formulas are based on Uniswap V3 whitepaper and SDK
+    const sqrtRatioX96 = BigInt(slot0.sqrtPriceX96.toString());
+    const Q96 = BigInt(2) ** BigInt(96);
+    
+    // Helper function to calculate amounts from liquidity
+    function getTokenAmountsFromLiquidity(sqrtRatioX96, liquidity) {
+      // Convert to BigInt for precision
+      const liquidityBigInt = BigInt(liquidity.toString());
+      
+      // Calculate amount0 (token0 amount)
+      const amount0BigInt = (liquidityBigInt * Q96) / sqrtRatioX96;
+      
+      // Calculate amount1 (token1 amount)
+      const amount1BigInt = (liquidityBigInt * sqrtRatioX96) / Q96;
+      
+      // Convert back to Number with proper decimal adjustments
+      const amount0 = Number(amount0BigInt) / Math.pow(10, pageIsToken0 ? PAGE_DECIMALS : ETH_DECIMALS);
+      const amount1 = Number(amount1BigInt) / Math.pow(10, pageIsToken0 ? ETH_DECIMALS : PAGE_DECIMALS);
+      
+      return { amount0, amount1 };
+    }
+    
+    // Get token amounts from liquidity
+    const { amount0, amount1 } = getTokenAmountsFromLiquidity(sqrtRatioX96, liquidity);
+    
+    console.log('Amount token0:', amount0);
+    console.log('Amount token1:', amount1);
+    
+    // Calculate TVL - ensure we're assigning PAGE and ETH correctly
+    const pageAmount = pageIsToken0 ? amount0 : amount1;
+    const ethAmount = pageIsToken0 ? amount1 : amount0;
+    
+    const pageTVL = pageAmount * pagePrice;
+    const ethTVL = ethAmount * ethPrice;
+    const totalTVL = pageTVL + ethTVL;
+    
+    console.log('PAGE TVL:', pageTVL);
+    console.log('ETH TVL:', ethTVL);
+    console.log('Total TVL:', totalTVL);
+    
+    return totalTVL;
+  } catch (error) {
+    console.error('Error calculating V3 pool TVL:', error);
+    throw error;
+  }
+}
+
+/**
  * Fetch Osmosis PAGE price
  */
 async function fetchOsmosisPrice() {
@@ -310,122 +404,6 @@ async function fetchOsmosisPrice() {
     console.error('Error fetching Osmosis price:', error);
     throw error;
   }
-}
-
-// Add this function to your tokenServices.js file
-
-/**
- * Get TVL for a Uniswap V3 pool
- * @param {string} poolAddress - Address of the V3 pool
- * @param {object} tokenConfig - Token configuration
- * @param {string} chain - Chain name
- * @param {number} pagePrice - Current PAGE price in USD
- * @param {number} ethPrice - Current ETH price in USD
- * @returns {number} - TVL in USD
- */
-async function getV3PoolTVL(poolAddress, tokenConfig, chain, pagePrice, ethPrice) {
-  try {
-    console.log(`Fetching V3 pool TVL for ${poolAddress}...`);
-    const provider = getProvider(chain);
-    
-    // Extended ABI for V3 pool with liquidity function
-    const poolAbiExtended = [
-      ...UNISWAP_V3_POOL_ABI,
-      {
-        "inputs": [],
-        "name": "liquidity",
-        "outputs": [{ "internalType": "uint128", "name": "", "type": "uint128" }],
-        "stateMutability": "view",
-        "type": "function"
-      }
-    ];
-    
-    const poolContract = new ethers.Contract(poolAddress, poolAbiExtended, provider);
-    
-    // Get current liquidity in the pool
-    const liquidity = await poolContract.liquidity();
-    console.log('Total V3 pool liquidity:', liquidity.toString());
-    
-    // Get slot0 for the current tick and price
-    const slot0 = await poolContract.slot0();
-    const currentTick = slot0.tick;
-    console.log('Current tick:', currentTick);
-    
-    // Get token addresses
-    const token0Address = await poolContract.token0();
-    const token1Address = await poolContract.token1();
-    
-    // Check if PAGE is token0 or token1
-    const pageIsToken0 = token0Address.toLowerCase() === tokenConfig.address.toLowerCase();
-    const PAGE_DECIMALS = tokenConfig.decimals;
-    const ETH_DECIMALS = 18; // ETH has 18 decimals
-    
-    // Calculate amounts from liquidity
-    // These formulas are based on Uniswap V3 whitepaper and SDK
-    const sqrtRatioX96 = BigInt(slot0.sqrtPriceX96.toString());
-    const Q96 = BigInt(2) ** BigInt(96);
-    
-    // Helper function to calculate amounts from liquidity
-    // Based on Uniswap's math for calculating amounts from liquidity
-    function getTokenAmountsFromLiquidity(sqrtRatioX96, liquidity) {
-      // Convert to BigInt for precision
-      const liquidityBigInt = BigInt(liquidity.toString());
-      
-      // Calculate amount0 (token0 amount)
-      const amount0BigInt = (liquidityBigInt * Q96) / sqrtRatioX96;
-      
-      // Calculate amount1 (token1 amount)
-      const amount1BigInt = (liquidityBigInt * sqrtRatioX96) / Q96;
-      
-      // Convert back to Number with proper decimal adjustments
-      const amount0 = Number(amount0BigInt) / Math.pow(10, pageIsToken0 ? PAGE_DECIMALS : ETH_DECIMALS);
-      const amount1 = Number(amount1BigInt) / Math.pow(10, pageIsToken0 ? ETH_DECIMALS : PAGE_DECIMALS);
-      
-      return { amount0, amount1 };
-    }
-    
-    // Get token amounts from liquidity
-    const { amount0, amount1 } = getTokenAmountsFromLiquidity(sqrtRatioX96, liquidity);
-    
-    console.log('Amount token0:', amount0);
-    console.log('Amount token1:', amount1);
-    
-    // Calculate TVL - ensure we're assigning PAGE and ETH correctly
-    const pageAmount = pageIsToken0 ? amount0 : amount1;
-    const ethAmount = pageIsToken0 ? amount1 : amount0;
-    
-    const pageTVL = pageAmount * pagePrice;
-    const ethTVL = ethAmount * ethPrice;
-    const totalTVL = pageTVL + ethTVL;
-    
-    console.log('PAGE TVL:', pageTVL);
-    console.log('ETH TVL:', ethTVL);
-    console.log('Total TVL:', totalTVL);
-    
-    return totalTVL;
-  } catch (error) {
-    console.error('Error calculating V3 pool TVL:', error);
-    throw error;
-  }
-}
-
-// Then in your frame.js file, modify the TVL calculation section:
-if (chain === "base") {
-  // For Base, which uses V3 pool, use the V3-specific TVL calculation
-  const totalTVL = await getV3PoolTVL(
-    tokenConfig.lpAddress,
-    tokenConfig,
-    chain,
-    price, // PAGE price in USD
-    priceData.ethPrice // ETH price in USD
-  );
-  tvl = `$${totalTVL.toLocaleString()}`;
-} else {
-  // For V2 pools, use the existing calculation
-  const reserves = await getPoolReserves(tokenConfig.lpAddress, tokenConfig, chain);
-  const pageValueInPool = reserves.tokenAAmount * price;
-  const ethValue = reserves.tokenBAmount * priceData.ethPrice;
-  tvl = `$${(pageValueInPool + ethValue).toLocaleString()}`;
 }
 
 /**
