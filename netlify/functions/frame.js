@@ -1,4 +1,4 @@
-const { fetchPagePrices, getPoolReserves, fetchOsmosisTVL } = require('./utils/tokenServices');
+const { fetchPagePrices, getPoolReserves, fetchOsmosisTVL, getV3PoolTVL } = require('./utils/tokenServices');
 const { PAGE_TOKEN_CONFIG } = require('./utils/tokenConfig');
 
 // Helper function to check if user is on a chain-specific view
