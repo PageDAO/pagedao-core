@@ -1,16 +1,24 @@
 [build]
-  base = "/"
-  command = "pnpm run build"
-  publish = "public"
+  command = "pnpm build"
+  functions = "netlify/functions"
+  publish = "packages/dashboard/dist"
 
-# Proxy to the API functions
+[dev]
+  framework = "#custom"
+  command = "pnpm run dev:dashboard"
+  port = 8888
+  targetPort = 3000
+  publish = "packages/dashboard/dist"
+  autoLaunch = true
+
+# Redirect API requests to Netlify Functions
 [[redirects]]
   from = "/api/v1/*"
-  to = "/.netlify/functions/api/:splat"
+  to = "/.netlify/functions/:splat"
   status = 200
 
-# Keep existing Frame redirects
+# Redirect all routes to index.html for SPA routing
 [[redirects]]
-  from = "/.netlify/functions/frame"
-  to = "/.netlify/functions/frame"
+  from = "/*"
+  to = "/index.html"
   status = 200

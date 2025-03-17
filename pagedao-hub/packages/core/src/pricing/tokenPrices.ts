@@ -2,9 +2,21 @@
 import { ethers } from 'ethers';
 import axios from 'axios';
 import { getProvider } from '../providers';
-import { getTokenConfig } from '../config';
+import { getTokenConfig, getSupportedChains } from '../config';
 import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../abis';
 import { PriceData, PoolReserves, ChainId } from '../types';
+import { 
+  calculateV2PoolRatio, 
+  calculatePagePriceFromEthPool 
+} from '../liquidity/tvl/v2PoolCalculator';
+import { 
+  calculatePagePriceFromV3Pool, 
+  getV3PoolTVL 
+} from '../liquidity/tvl/v3PoolCalculator';
+import { 
+  fetchOsmosisData as fetchOsmosisPoolData,
+  calculatePagePriceFromOsmosis 
+} from '../liquidity/tvl/osmosisCalculator';
 
 // Simple logging utility
 const logger = {
@@ -61,7 +73,7 @@ export async function fetchPagePrices(): Promise<PriceData> {
       timestamp: now
     };
 
-    logger.info('Updated price cache');
+    logger.info('Updated price cache:', priceCache);
     return priceCache;
   } catch (error) {
     logger.error('Error fetching prices:', error);
@@ -115,36 +127,273 @@ async function fetchEthPrice(): Promise<number> {
     return ethPrice;
   } catch (error) {
     logger.error('Error fetching ETH price from Uniswap V3 pool:', error);
-    throw error;
+    // Fallback to a default ETH price or another price source
+    // This is just for development - in production we'd want a more robust solution
+    logger.warn('Using fallback ETH price of $3000 due to fetch error');
+    return 3000;
   }
 }
 
-// Additional implementation of other price fetching functions will go here...
-// For now, we'll add placeholder implementations to be completed later
-
+/**
+ * Fetch PAGE price from Osmosis
+ */
 async function fetchOsmosisPrice(): Promise<number> {
-  // Placeholder - will implement actual Osmosis price fetching
-  return 0.12;
+  try {
+    logger.info('Fetching PAGE price from Osmosis...');
+    // Use the specialized function from osmosisCalculator
+    const pagePrice = await calculatePagePriceFromOsmosis();
+    logger.info('Fetched PAGE price from Osmosis:', pagePrice);
+    return pagePrice;
+  } catch (error) {
+    logger.error('Error fetching PAGE price from Osmosis:', error);
+    // If we have a cached price, return that instead of failing
+    if (priceCache && priceCache.osmosis) {
+      logger.warn('Using cached Osmosis price due to fetch error');
+      return priceCache.osmosis;
+    }
+    // Otherwise, default fallback for development
+    logger.warn('Using fallback PAGE price of $0.12 for Osmosis due to fetch error');
+    return 0.12;
+  }
 }
 
+/**
+ * Fetch PAGE price from Ethereum
+ */
 async function fetchEthereumPagePrice(ethPrice: number): Promise<number> {
-  // Placeholder - will implement actual Ethereum price fetching
-  return 0.11;
+  try {
+    logger.info('Fetching PAGE price from Ethereum...');
+    const tokenConfig = getTokenConfig('ethereum');
+    const provider = await getProvider('ethereum');
+    
+    // We're using a V2 pool on Ethereum
+    if (tokenConfig.pool.type !== 'v2') {
+      throw new Error('Ethereum PAGE pool is not V2 type');
+    }
+    
+    // Create contract instance for the pool
+    const poolContract = new ethers.Contract(
+      tokenConfig.pool.address,
+      UNISWAP_V2_PAIR_ABI,
+      provider
+    );
+    
+    // Get pool reserves
+    const reserves = await poolContract.getReserves();
+    const token0 = await poolContract.token0();
+    const token1 = await poolContract.token1();
+    
+    // Get token contracts to get decimals
+    const erc20Abi = ['function decimals() view returns (uint8)'];
+    const token0Contract = new ethers.Contract(token0, erc20Abi, provider);
+    const token1Contract = new ethers.Contract(token1, erc20Abi, provider);
+    
+    // Get token decimals
+    const [token0Decimals, token1Decimals] = await Promise.all([
+      token0Contract.decimals(),
+      token1Contract.decimals()
+    ]);
+    
+    // Process reserves based on which token is PAGE
+    const pageIsToken0 = tokenConfig.pool.tokenIsToken0;
+    
+    // Convert reserves to decimal
+    const token0Amount = parseFloat(ethers.formatUnits(reserves[0], token0Decimals));
+    const token1Amount = parseFloat(ethers.formatUnits(reserves[1], token1Decimals));
+    
+    // Calculate PAGE price based on ETH price
+    let pagePrice: number;
+    if (pageIsToken0) {
+      // If PAGE is token0, calculate PAGE price based on token1 (ETH) price
+      pagePrice = (token1Amount * ethPrice) / token0Amount;
+    } else {
+      // If PAGE is token1, calculate PAGE price based on token0 (ETH) price
+      pagePrice = (token0Amount * ethPrice) / token1Amount;
+    }
+    
+    logger.info('Fetched PAGE price from Ethereum:', pagePrice);
+    return pagePrice;
+  } catch (error) {
+    logger.error('Error fetching PAGE price from Ethereum:', error);
+    // If we have a cached price, return that instead of failing
+    if (priceCache && priceCache.ethereum) {
+      logger.warn('Using cached Ethereum price due to fetch error');
+      return priceCache.ethereum;
+    }
+    // Otherwise, default fallback for development
+    logger.warn('Using fallback PAGE price of $0.11 for Ethereum due to fetch error');
+    return 0.11;
+  }
 }
 
+/**
+ * Fetch PAGE price from Optimism
+ */
 async function fetchOptimismPagePrice(ethPrice: number): Promise<number> {
-  // Placeholder - will implement actual Optimism price fetching
-  return 0.13;
+  try {
+    logger.info('Fetching PAGE price from Optimism...');
+    const tokenConfig = getTokenConfig('optimism');
+    const provider = await getProvider('optimism');
+    
+    // We're using a V2 pool on Optimism
+    if (tokenConfig.pool.type !== 'v2') {
+      throw new Error('Optimism PAGE pool is not V2 type');
+    }
+    
+    // Similar implementation to Ethereum but for Optimism pools
+    const poolContract = new ethers.Contract(
+      tokenConfig.pool.address,
+      UNISWAP_V2_PAIR_ABI,
+      provider
+    );
+    
+    // Get pool reserves and token addresses
+    const reserves = await poolContract.getReserves();
+    const token0 = await poolContract.token0();
+    const token1 = await poolContract.token1();
+    
+    // Get token contracts to get decimals
+    const erc20Abi = ['function decimals() view returns (uint8)'];
+    const token0Contract = new ethers.Contract(token0, erc20Abi, provider);
+    const token1Contract = new ethers.Contract(token1, erc20Abi, provider);
+    
+    // Get token decimals
+    const [token0Decimals, token1Decimals] = await Promise.all([
+      token0Contract.decimals(),
+      token1Contract.decimals()
+    ]);
+    
+    // Process reserves based on which token is PAGE
+    const pageIsToken0 = tokenConfig.pool.tokenIsToken0;
+    
+    // Convert reserves to decimal
+    const token0Amount = parseFloat(ethers.formatUnits(reserves[0], token0Decimals));
+    const token1Amount = parseFloat(ethers.formatUnits(reserves[1], token1Decimals));
+    
+    // Calculate PAGE price based on ETH price
+    let pagePrice: number;
+    if (pageIsToken0) {
+      // If PAGE is token0, calculate PAGE price based on token1 (ETH) price
+      pagePrice = (token1Amount * ethPrice) / token0Amount;
+    } else {
+      // If PAGE is token1, calculate PAGE price based on token0 (ETH) price
+      pagePrice = (token0Amount * ethPrice) / token1Amount;
+    }
+    
+    logger.info('Fetched PAGE price from Optimism:', pagePrice);
+    return pagePrice;
+  } catch (error) {
+    logger.error('Error fetching PAGE price from Optimism:', error);
+    // If we have a cached price, return that instead of failing
+    if (priceCache && priceCache.optimism) {
+      logger.warn('Using cached Optimism price due to fetch error');
+      return priceCache.optimism;
+    }
+    // Otherwise, default fallback for development
+    logger.warn('Using fallback PAGE price of $0.13 for Optimism due to fetch error');
+    return 0.13;
+  }
 }
 
+/**
+ * Fetch PAGE price from Base
+ */
 async function fetchBasePagePrice(ethPrice: number): Promise<number> {
-  // Placeholder - will implement actual Base price fetching
-  return 0.14;
+  try {
+    logger.info('Fetching PAGE price from Base...');
+    const tokenConfig = getTokenConfig('base');
+    const provider = await getProvider('base');
+    
+    // Base uses a V3 pool
+    if (tokenConfig.pool.type !== 'v3') {
+      throw new Error('Base PAGE pool is not V3 type');
+    }
+    
+    // Create contract instance for the V3 pool
+    const poolContract = new ethers.Contract(
+      tokenConfig.pool.address,
+      UNISWAP_V3_POOL_ABI,
+      provider
+    );
+    
+    // Get slot0 data for the current price
+    const slot0 = await poolContract.slot0();
+    const sqrtPriceX96 = slot0.sqrtPriceX96;
+    
+    // Get token addresses
+    const token0 = await poolContract.token0();
+    const token1 = await poolContract.token1();
+    
+    // Get token contracts to get decimals
+    const erc20Abi = ['function decimals() view returns (uint8)'];
+    const token0Contract = new ethers.Contract(token0, erc20Abi, provider);
+    const token1Contract = new ethers.Contract(token1, erc20Abi, provider);
+    
+    // Get token decimals
+    const [token0Decimals, token1Decimals] = await Promise.all([
+      token0Contract.decimals(),
+      token1Contract.decimals()
+    ]);
+    
+    // Process based on which token is PAGE
+    const pageIsToken0 = tokenConfig.pool.tokenIsToken0;
+    
+    // Calculate the price from sqrtPriceX96
+    const sqrtPriceX96BigInt = BigInt(sqrtPriceX96.toString());
+    const priceX192BigInt = sqrtPriceX96BigInt * sqrtPriceX96BigInt;
+    const Q192 = BigInt(2) ** BigInt(192);
+    const rawPrice = Number(priceX192BigInt) / Number(Q192);
+    
+    // Adjust for decimals
+    const decimalAdjustment = Math.pow(10, token0Decimals - token1Decimals);
+    const poolPrice = rawPrice * decimalAdjustment;
+    
+    // Calculate PAGE price based on whether it's token0 or token1
+    let pagePrice: number;
+    if (pageIsToken0) {
+      // PAGE/ETH price
+      pagePrice = ethPrice / poolPrice;
+    } else {
+      // ETH/PAGE price
+      pagePrice = ethPrice * poolPrice;
+    }
+    
+    logger.info('Fetched PAGE price from Base:', pagePrice);
+    return pagePrice;
+  } catch (error) {
+    logger.error('Error fetching PAGE price from Base:', error);
+    // If we have a cached price, return that instead of failing
+    if (priceCache && priceCache.base) {
+      logger.warn('Using cached Base price due to fetch error');
+      return priceCache.base;
+    }
+    // Otherwise, default fallback for development
+    logger.warn('Using fallback PAGE price of $0.14 for Base due to fetch error');
+    return 0.14;
+  }
 }
 
+/**
+ * Fetch Osmosis TVL
+ */
 async function fetchOsmosisTVL(): Promise<number> {
-  // Placeholder - will implement actual Osmosis TVL fetching
-  return 500000;
+  try {
+    logger.info('Fetching Osmosis TVL...');
+    // Get the Osmosis pool data which includes TVL
+    const osmosisData = await fetchOsmosisPoolData();
+    logger.info('Fetched Osmosis TVL:', osmosisData.tvl);
+    return osmosisData.tvl;
+  } catch (error) {
+    logger.error('Error fetching Osmosis TVL:', error);
+    // If we have a cached TVL, return that instead of failing
+    if (priceCache && priceCache.osmosisTVL) {
+      logger.warn('Using cached Osmosis TVL due to fetch error');
+      return priceCache.osmosisTVL;
+    }
+    // Otherwise, default fallback for development
+    logger.warn('Using fallback TVL of $500000 for Osmosis due to fetch error');
+    return 500000;
+  }
 }
 
 /**
