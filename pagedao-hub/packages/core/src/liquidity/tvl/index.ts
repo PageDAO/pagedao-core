@@ -1,5 +1,5 @@
 import { calculateV2PoolTVL } from './v2PoolCalculator';
-import { calculateV3PoolTVL } from './v3PoolCalculator';
+import { calculateV3PoolTVL, getV3PoolTVL } from './v3PoolCalculator';
 import { calculateOsmosisTVL, fetchOsmosisTVL } from './osmosisCalculator';
 import { PoolType, getPoolData, PoolReserves, V3PoolState } from '../poolService';
 
@@ -62,4 +62,88 @@ export async function calculatePoolTVL(
   }
 }
 
-export { calculateV2PoolTVL, calculateV3PoolTVL, calculateOsmosisTVL, fetchOsmosisTVL };
+/**
+ * Calculate TVL for PAGE token across all chains
+ * @param pagePrice Object containing PAGE price by chain
+ * @param ethPrice ETH price in USD
+ * @param poolData Object containing pool addresses by chain
+ * @returns Object containing TVL by chain and total TVL
+ */
+export async function calculatePageTVL(
+  pagePrice: Record<string, number>,
+  ethPrice: number,
+  poolData: Record<string, { address: string, type: PoolType }>
+): Promise<{ byChain: Record<string, number>, total: number }> {
+  try {
+    logger.info('Calculating PAGE TVL across all chains');
+    
+    const tvlPromises: Record<string, Promise<number>> = {};
+    
+    // Start TVL calculations for each chain in parallel
+    for (const [chain, data] of Object.entries(poolData)) {
+      switch (data.type) {
+        case PoolType.V2:
+          tvlPromises[chain] = calculateV2PoolTVL(
+            await getPoolData(data.address, chain, PoolType.V2) as PoolReserves,
+            pagePrice[chain] || 0,
+            ethPrice,
+            chain
+          );
+          break;
+          
+        case PoolType.V3:
+          tvlPromises[chain] = getV3PoolTVL(
+            data.address,
+            chain,
+            pagePrice[chain] || 0,
+            ethPrice
+          );
+          break;
+          
+        case PoolType.OSMOSIS:
+          tvlPromises[chain] = fetchOsmosisTVL(data.address);
+          break;
+      }
+    }
+    
+    // Wait for all promises to resolve
+    const tvlResults: Record<string, number> = {};
+    for (const [chain, promise] of Object.entries(tvlPromises)) {
+      try {
+        tvlResults[chain] = await promise;
+      } catch (error) {
+        logger.error(`Failed to calculate TVL for ${chain}`, error);
+        tvlResults[chain] = 0;
+      }
+    }
+    
+    // Calculate total TVL
+    const totalTVL = Object.values(tvlResults).reduce((sum, value) => sum + value, 0);
+    
+    logger.info('TVL calculation completed');
+    logger.info(`Total TVL: $${totalTVL.toFixed(2)}`);
+    Object.entries(tvlResults).forEach(([chain, tvl]) => {
+      logger.info(`- ${chain}: $${tvl.toFixed(2)} (${((tvl / totalTVL) * 100).toFixed(2)}%)`);
+    });
+    
+    return {
+      byChain: tvlResults,
+      total: totalTVL
+    };
+  } catch (error) {
+    logger.error('Failed to calculate PAGE TVL across chains', error);
+    throw new Error(`PAGE TVL calculation failed: ${(error as Error).message}`);
+  }
+}
+
+// Export the calculators for individual use
+export { calculateV2PoolTVL, calculateV3PoolTVL, calculateOsmosisTVL, fetchOsmosisTVL, getV3PoolTVL };
+
+// Export a default object for convenience
+export default {
+  calculatePoolTVL,
+  calculatePageTVL,
+  v2: { calculateV2PoolTVL },
+  v3: { calculateV3PoolTVL, getV3PoolTVL },
+  osmosis: { calculateOsmosisTVL, fetchOsmosisTVL }
+};
