@@ -1,26 +1,25 @@
 {
-    "name": "@pagedao/core",
-    "version": "0.1.0",
-    "description": "Core library for PageDAO Hub",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "scripts": {
-      "build": "tsc",
-      "dev": "tsc --watch",
-      "test": "jest",
-      "lint": "eslint src --ext .ts"
-    },
-    "dependencies": {
-      "ethers": "^6.13.5",
-      "axios": "^1.8.2",
-      "zod": "^3.22.4"
-    },
-    "devDependencies": {
-      "typescript": "^5.0.0",
-      "jest": "^29.7.0",
-      "ts-jest": "^29.1.2",
-      "@types/jest": "^29.5.0",
-      "eslint": "^8.0.0"
-    }
+  "name": "@pagedao/core",
+  "version": "0.1.0",
+  "description": "Core library for PageDAO Hub",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "axios": "^1.8.3",
+    "ethers": "^6.13.5",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.0.0"
   }
-  
+}
