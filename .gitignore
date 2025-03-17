@@ -9,6 +9,7 @@ dist/
 build/
 .netlify/
 .serverless/
+todo.txt
 
 # Environment variables
 .env
