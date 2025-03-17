@@ -1,0 +1,36 @@
+[build]
+  command = "pnpm run build"
+  functions = "netlify/functions"
+  publish = "public"
+
+[dev]
+  command = "pnpm run dev"
+  port = 8888
+  targetPort = 3000
+  framework = "#custom"
+
+# Redirects for API endpoints
+[[redirects]]
+  from = "/api/v1/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/token/price"
+  to = "/.netlify/functions/token-price"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/token/price/*"
+  to = "/.netlify/functions/token-price/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/liquidity/tvl"
+  to = "/.netlify/functions/liquidity-tvl"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/liquidity/tvl/*"
+  to = "/.netlify/functions/liquidity-tvl/:splat"
+  status = 200

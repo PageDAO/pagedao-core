@@ -1,0 +1,16 @@
+[build]
+  base = "/"
+  command = "pnpm run build"
+  publish = "public"
+
+# Proxy to the API functions
+[[redirects]]
+  from = "/api/v1/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Keep existing Frame redirects
+[[redirects]]
+  from = "/.netlify/functions/frame"
+  to = "/.netlify/functions/frame"
+  status = 200

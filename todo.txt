@@ -1,0 +1,294 @@
+# PageDAO Hub Implementation TODO List
+
+## Important Implementation Guidelines
+
+- All logic reused from existing .js files must be refactored into new .ts files with proper typing
+- Follow consistent naming conventions across all packages
+- Design API endpoints with clear, descriptive names that reflect their purpose
+- Use these endpoint names consistently throughout the codebase (API implementation, core library, dashboard)
+- Implement proper state management for the dashboard to ensure consistent data display
+- Document all design decisions with clear rationales
+- Prioritize maintainability and extensibility in all architectural decisions
+
+## Current Progress (as of latest assessment)
+- ✅ Basic token configurations defined for multiple chains (Ethereum, Optimism, Base)
+- ✅ Support for different pool types (v2, v3) implemented
+- ✅ Backup RPC endpoints defined for resilience
+- ✅ Cache duration configured (5 minutes)
+- ✅ Multi-chain support for Ethereum, Optimism, and Base
+
+## Phase 0: Initial Setup and Migration Planning
+
+### Repository Structure
+- [ ] Create monorepo structure with packages directory
+- [ ] Set up pnpm-workspace.yaml configuration
+- [ ] Create initial package.json for root and each package
+- [ ] Set up shared ESLint, Prettier, and TypeScript configs
+- [ ] Configure GitHub Actions CI/CD pipeline
+- [ ] Set up dev container configurations for VS Code and GitHub Codespaces
+
+### API Design Planning
+- [ ] Define comprehensive API endpoint naming strategy
+  - [ ] Create consistent naming pattern (e.g., `/api/token/price`, `/api/token/price/:chain`)
+  - [ ] Document expected request/response formats for each endpoint
+  - [ ] Define error response structure and status codes
+- [ ] Create API versioning strategy (e.g., `/api/v1/token/price`)
+- [ ] Design webhook API endpoints with security in mind
+
+### Migration Planning
+- [ ] Create config.ts with consolidated configuration
+  - [ ] Implement Zod schema validation
+  - [ ] Add environment variable integration
+  - [ ] Implement proper logging
+  - [ ] Helper functions for safe access
+- [ ] Identify core business logic to extract from Frame
+  - [ ] Map out dependencies between existing files
+  - [ ] Create migration plan for each component
+- [ ] Update netlify.toml for monorepo structure
+- [ ] Create deployment strategy document
+
+## Phase 1: Core Library Extraction
+
+### Configuration Management
+- [✅] Define RPC provider URLs for multiple chains
+- [✅] Implement backup RPC URLs for resilience
+- [✅] Define token configurations for multiple chains
+- [ ] Create robust configuration management system
+  - [ ] Implement .env template with documentation
+  - [ ] Add validation for all configuration parameters
+  - [ ] Create secure mechanism for updating sensitive configuration
+  - [ ] Implement configuration versioning and change tracking
+- [ ] Set up secure storage for:
+  - [ ] RPC provider URLs and API keys
+  - [ ] Webhook secrets and authentication tokens
+  - [ ] Base node provider information
+
+### Core Library (@pagedao/core)
+- [ ] Create package structure with proper TypeScript configuration
+- [ ] Extract and refactor token price fetching from Frame
+  - [ ] Migrate getProvider function from web3.js to providers.ts
+  - [ ] Refactor fetchPagePrices from tokenServices.js to tokenPrices.ts
+  - [ ] Extract pool interaction logic from tokenServices.js to poolService.ts
+- [ ] Implement liquidity-weighted price calculation algorithm
+  - [ ] Support configurable weighting options
+  - [ ] Add validation and confidence scoring
+  - [ ] Implement fallback strategies
+- [ ] Develop TVL calculation modules
+  - [ ] Migrate V2 pool TVL calculation from tokenServices.js to tvl/v2PoolCalculator.ts
+  - [ ] Migrate V3 pool TVL calculation from tokenServices.js to tvl/v3PoolCalculator.ts
+  - [ ] Migrate Osmosis pool TVL calculation from tokenServices.js to tvl/osmosisCalculator.ts
+- [ ] Create blockchain connector interfaces
+  - [ ] Create base BlockchainConnector interface
+  - [ ] Ethereum connector implementation (EthereumConnector.ts)
+  - [ ] Optimism connector implementation (OptimismConnector.ts)
+  - [ ] Base connector implementation (BaseConnector.ts)
+  - [ ] Osmosis connector implementation (OsmosisConnector.ts)
+- [ ] Implement resilience and error handling
+  - [ ] Add retry mechanisms with exponential backoff for RPC calls
+  - [ ] Create circuit breakers for external service dependencies
+  - [ ] Implement fallback providers for each blockchain
+  - [ ] Design graceful degradation paths when services are unavailable
+- [✅] Implement caching strategies (basic caching duration defined)
+- [ ] Set up comprehensive test suite
+  - [ ] Unit tests for calculation functions
+  - [ ] Mock blockchain responses
+  - [ ] Integration tests with test networks
+  - [ ] Load testing for high-volume scenarios
+
+## Phase 2: Data Storage & Persistence
+
+### Data Storage Strategy
+- [ ] Design and implement data persistence strategy
+  - [ ] Create local storage solution for webhook data
+  - [ ] Implement file-based storage for historical price data
+  - [ ] Set up backup and recovery procedures for critical data
+- [ ] Implement data validation and sanitization
+- [ ] Create data migration tools for version upgrades
+- [ ] Implement data retention policies
+
+### Caching Layer
+- [ ] Design multi-level caching strategy
+  - [ ] In-memory cache for high-frequency data
+  - [ ] Persistent cache for less volatile data
+  - [ ] Implement cache invalidation mechanisms
+  - [ ] Add cache warming procedures for cold starts
+
+## Phase 3: API Layer Enhancement
+
+### API Structure
+- [ ] Create @pagedao/api package
+- [ ] Set up Netlify Functions configuration
+  - [ ] Migrate and update netlify.toml
+  - [ ] Configure build settings for monorepo
+- [ ] Implement consistent error handling and response format
+- [ ] Add input validation middleware
+
+### API Endpoints
+- [ ] Implement token endpoints
+  - [ ] `/api/v1/token/price` - Current token prices across all chains
+  - [ ] `/api/v1/token/price/:chain` - Chain-specific price metrics
+  - [ ] `/api/v1/token/price/history` - Historical price data
+  - [ ] `/api/v1/token/supply` - Supply metrics (circulating, total)
+- [ ] Build liquidity endpoints
+  - [ ] `/api/v1/liquidity/tvl` - Total TVL across all chains
+  - [ ] `/api/v1/liquidity/tvl/:chain` - Chain-specific TVL
+  - [ ] `/api/v1/liquidity/pools` - Pool-specific data
+- [ ] Create governance endpoints
+  - [ ] `/api/v1/governance/proposals` - List proposals
+  - [ ] `/api/v1/governance/proposals/:id` - Proposal details
+  - [ ] `/api/v1/governance/votes` - Voting statistics
+- [ ] Implement Base webhook handler
+  - [ ] `/api/v1/webhooks/base` - Base chain event handler
+  - [ ] Create secure signature verification
+  - [ ] Build event validation and processing
+  - [ ] Implement error handling and logging
+  - [ ] Add persistent storage for webhook data
+
+### API Documentation
+- [ ] Generate OpenAPI/Swagger specifications
+- [ ] Create API usage documentation
+- [ ] Document rate limiting and usage policies
+- [ ] Create architectural decision records (ADRs)
+
+### API Testing
+- [ ] Implement comprehensive API testing
+  - [ ] Unit tests for all endpoints
+  - [ ] Load testing for high-traffic scenarios
+  - [ ] Stress testing for webhook handlers
+  - [ ] Security testing for authentication mechanisms
+
+## Phase 4: Dashboard Development
+
+### Dashboard Setup
+- [ ] Create @pagedao/dashboard package
+- [ ] Configure Vite build system
+- [ ] Set up React Router
+- [ ] Implement theme system (light/dark modes)
+- [ ] Create responsive layout foundation
+
+### State Management
+- [ ] Evaluate and select state management solution (Redux Toolkit, Zustand, etc.)
+- [ ] Design state structure with clear separation of concerns
+  - [ ] Token price state
+  - [ ] Liquidity/TVL state
+  - [ ] Governance state
+  - [ ] UI state (theme, preferences)
+- [ ] Implement API data fetching and caching strategy
+- [ ] Create selectors for derived data
+- [ ] Set up proper error handling in state management
+
+### Dashboard Components
+- [ ] Implement token metrics components
+  - [ ] Price display with change indicators
+  - [ ] Historical price charts
+  - [ ] Chain comparison views
+- [ ] Create liquidity visualization components
+  - [ ] TVL charts by chain
+  - [ ] Pool composition displays
+- [ ] Build governance interface components
+  - [ ] Proposal listings
+  - [ ] Voting interfaces with web3 wallet integration
+- [ ] Implement dashboard layout system
+  - [ ] Responsive grid layout
+  - [ ] Configurable widget system
+- [ ] Create user preferences storage
+
+### Dashboard Testing
+- [ ] Set up component testing with React Testing Library
+- [ ] Implement visual regression testing
+- [ ] Add accessibility testing
+- [ ] Create end-to-end tests for critical user journeys
+
+## Phase 5: MCP Integration
+
+- [ ] Set up MCP server package structure
+- [ ] Implement MCP specification-compliant request/response handling
+  - [ ] Ensure full compliance with MCP specification
+  - [ ] Validate responses against MCP schema
+  - [ ] Implement MCP-specific error handling
+- [ ] Create system information and status endpoints
+- [ ] Build token price and basic stats endpoints
+- [ ] Implement authentication layer
+- [ ] Deploy initial MCP server for testing with Claude Desktop
+- [ ] Test with multiple AI assistants beyond Claude
+- [ ] Develop historical data endpoints with customizable timeframes
+- [ ] Create governance data access endpoints
+- [ ] Document MCP API for AI assistant developers
+
+## Phase 6: Monitoring & Observability
+
+- [ ] Develop comprehensive monitoring strategy
+  - [ ] Implement structured logging across all components
+  - [ ] Create custom metrics for key performance indicators
+  - [ ] Set up alerting for critical failures and performance degradation
+  - [ ] Implement user analytics for dashboard usage patterns
+- [ ] Set up monitoring dashboards
+  - [ ] API performance metrics
+  - [ ] Blockchain connector health
+  - [ ] Webhook reliability metrics
+  - [ ] User engagement analytics
+- [ ] Create operational runbooks
+  - [ ] Incident response procedures
+  - [ ] Troubleshooting guides for common issues
+  - [ ] Performance tuning recommendations
+
+## Phase 7: Integration and Optimization
+
+### Integration
+- [ ] Ensure backward compatibility with existing Frame
+- [ ] Integrate dashboard with API endpoints
+- [ ] Connect web3 wallet providers
+- [ ] Implement real-time updates where appropriate
+
+### Performance Optimization
+- [ ] Optimize RPC calls to minimize provider costs
+- [ ] Implement efficient caching strategies
+- [ ] Batch blockchain queries where possible
+- [ ] Configure CDN for static assets
+- [ ] Optimize bundle sizes for dashboard
+
+### Security Review
+- [ ] Conduct security audit of API endpoints
+- [ ] Review authentication mechanisms
+- [ ] Validate input sanitization
+- [ ] Check for sensitive data exposure
+- [ ] Implement rate limiting and abuse prevention
+
+## Phase 8: Documentation and Deployment
+
+### Documentation
+- [ ] Create comprehensive README files for each package
+- [ ] Document all public APIs with JSDoc/TSDoc
+- [ ] Create setup and contribution guides
+- [ ] Document deployment procedures
+- [ ] Document all environment variables and configuration options
+- [ ] Create troubleshooting guides for common issues
+- [ ] Document performance expectations and limitations
+
+### Deployment
+- [ ] Set up staging environment
+- [ ] Configure production environment
+- [ ] Implement blue/green deployment strategy
+- [ ] Add automated rollback procedures
+- [ ] Create disaster recovery plan and test regularly
+- [ ] Set up logging and error tracking
+- [ ] Create deployment automation scripts
+
+## Special Considerations
+
+### Base Webhook Integration
+- [ ] Develop event processor module
+  - [ ] Token transfer processing
+  - [ ] Pool update handling
+  - [ ] Governance event processing
+- [ ] Create webhook configuration interface
+- [ ] Write Base node operator documentation
+- [ ] Implement webhook monitoring
+- [ ] Create persistent storage for webhook data
+- [ ] Implement webhook replay capability for recovery
+
+### Backward Compatibility
+- [ ] Ensure Frame continues to function during transition
+- [ ] Make shared code work with both Frame and Hub
+- [ ] Plan migration path for Frame to use new core library
+- [ ] Create compatibility layer for legacy API consumers

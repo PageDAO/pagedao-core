@@ -1,0 +1,22 @@
+{
+    "name": "@pagedao/api",
+    "version": "0.1.0",
+    "description": "API layer for PageDAO Hub",
+    "scripts": {
+      "build": "tsc",
+      "dev": "netlify dev",
+      "lint": "eslint netlify/functions --ext .ts"
+    },
+    "dependencies": {
+      "@pagedao/core": "workspace:*",
+      "ethers": "^6.13.5",
+      "axios": "^1.8.2"
+    },
+    "devDependencies": {
+      "typescript": "^5.0.0",
+      "netlify-cli": "^15.0.0",
+      "@netlify/functions": "^2.0.0",
+      "eslint": "^8.0.0"
+    }
+  }
+  
