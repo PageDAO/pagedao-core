@@ -1,5 +1,9 @@
 # PageDAO Hub Implementation TODO List
 
+## Project Vision
+
+The PageDAO Hub serves as the central dashboard and API suite for the PageDAO ecosystem, providing comprehensive visibility into token metrics, governance activities, and interactions across multiple blockchains (Ethereum, Optimism, Base, Osmosis). Built as a modular, extensible system with a serverless architecture on Netlify, it implements a sophisticated liquidity-weighted price calculation model and provides both human and machine interfaces for data access.
+
 ## Important Implementation Guidelines
 
 - All logic reused from existing .js files must be refactored into new .ts files with proper typing
@@ -9,6 +13,102 @@
 - Implement proper state management for the dashboard to ensure consistent data display
 - Document all design decisions with clear rationales
 - Prioritize maintainability and extensibility in all architectural decisions
+- Follow the three-layer architecture (Data Collection, API, Presentation) as defined in the system architecture
+- Implement the comprehensive weighted price calculation algorithm as specified in the implementation plan
+- Build the modular package structure with clean separation of concerns
+
+## Critical Issues for Netlify Deployment (PRIORITY)
+
+### 1. Netlify Configuration Consolidation
+- [ ] Resolve multiple `netlify.toml` files issue (files exist at root, pagedao-hub/packages/api/netlify.toml, and pagedao-hub/packages/netlify.toml)
+- [ ] Create a single authoritative `netlify.toml` at repository root based on the implementation plan
+- [ ] Ensure all necessary redirects from all files are included in the consolidated file
+- [ ] Verify build command, publish directory, and function paths are correctly specified
+- [ ] Document which configuration options came from which original file
+- [ ] Validate that the configuration supports the multi-package structure described in the system architecture
+
+### 2. Build Process Standardization
+- [ ] Resolve inconsistent build commands across different netlify.toml files
+- [ ] Test build.sh script to ensure it works in Netlify environment as described in implementation.txt
+- [ ] Document build process including order of package builds (core → api → dashboard)
+- [ ] Create a simplified build process for initial deployment testing
+- [ ] Verify publish directory configuration (`publish = "public"` vs `publish = "packages/dashboard/dist"`)
+- [ ] Implement the incremental build approach outlined in the implementation plan
+- [ ] Set up CI/CD pipeline according to the DevOps tasks in the system architecture document
+
+### 3. Dependency Management
+- [ ] Audit all package.json files for missing dependencies
+- [ ] Add `zod` to packages that import it but don't declare it
+- [ ] Ensure consistent versioning across packages for shared dependencies
+- [ ] Verify pnpm workspace configuration correctly resolves internal dependencies
+- [ ] Test monorepo dependency resolution in Netlify environment
+- [ ] Update dependencies to match versions specified in the implementation plan
+- [ ] Verify ethers.js v6.13.5 compatibility across all packages
+- [ ] Confirm React v19 compatibility in the dashboard package
+- [ ] Implement package versioning with Changesets as specified in the architecture document
+
+### 4. Missing Modules and Constants
+- [ ] Create missing constants file referenced in code (e.g., TOKEN_DECIMALS in constants.ts)
+- [ ] Check all import statements to ensure they resolve correctly
+- [ ] Implement any missing utility functions or modules
+- [ ] Verify type declarations are complete and consistent
+- [ ] Create stubs for any features that are referenced but not yet implemented
+- [ ] Implement the standardized interfaces described in the system architecture
+- [ ] Create the BlockchainConnector implementations according to the design specifications
+- [ ] Build the TVL calculation modules as described in the implementation plan
+
+### 5. Environment Variables
+- [ ] Create comprehensive list of all environment variables referenced in the code
+- [ ] Document default values and required vs optional status
+- [ ] Create .env.example file with all required variables
+- [ ] Configure environment variables in Netlify deployment settings
+- [ ] Implement validation for critical environment variables
+- [ ] Set up secure storage for sensitive configuration as described in the implementation plan
+- [ ] Add RPC provider URLs and API keys as specified in the system architecture
+- [ ] Implement the environment-specific configuration as described in config.ts
+
+### 6. API/Core Integration
+- [ ] Verify @pagedao/core can be properly imported by @pagedao/api
+- [ ] Test cross-package function calls
+- [ ] Ensure workspace dependencies are correctly defined
+- [ ] Create integration tests for core-to-api functionality
+- [ ] Document any package-specific build requirements
+- [ ] Implement the API endpoints according to the system architecture specification
+- [ ] Apply the modular design pattern described in the implementation plan
+- [ ] Set up the standard response format for all API endpoints as described in the architecture
+- [ ] Implement proper error handling with the pattern defined in the implementation plan
+
+## Deployment Strategy
+
+### 1. Initial Setup
+- [ ] Create Netlify site and connect to repository
+- [ ] Configure base directory and build settings
+- [ ] Set up environment variables for initial deployment
+- [ ] Create staging and production environments with branch previews
+- [ ] Implement the deployment architecture as described in the system architecture document
+- [ ] Set up monitoring and alerting according to the architecture specifications
+- [ ] Configure logging and error tracking as detailed in the implementation plan
+
+### 2. Incremental Deployment
+- [ ] Start with minimal viable build (just core package)
+- [ ] Add API functions one by one, testing each
+- [ ] Deploy dashboard without API integration first
+- [ ] Connect dashboard to API endpoints gradually
+- [ ] Implement monitoring and error tracking
+- [ ] Follow the phased approach outlined in the implementation plan
+- [ ] Build according to the component dependencies described in the system architecture
+- [ ] Implement the backward compatibility strategy for the existing Frame
+
+### 3. Testing Framework
+- [ ] Set up end-to-end tests for critical paths
+- [ ] Create API endpoint tests
+- [ ] Implement unit tests for core functionality
+- [ ] Test build process in CI environment
+- [ ] Create performance benchmarks for backend functions
+- [ ] Implement the comprehensive testing strategy described in both documents
+- [ ] Set up mock blockchain responses for consistent testing
+- [ ] Create integration tests with test networks
+- [ ] Implement the load testing approach for high-traffic scenarios
 
 ## Current Progress (as of latest assessment)
 - ✅ Basic token configurations defined for multiple chains (Ethereum, Optimism, Base, Osmosis)
@@ -214,24 +314,25 @@
 
 ## Phase 5: MCP Integration
 
-- [ ] Set up MCP server package structure
+- [ ] Set up MCP server package structure as specified in the system architecture
 - [ ] Implement MCP specification-compliant request/response handling
   - [ ] Ensure full compliance with MCP specification
   - [ ] Validate responses against MCP schema
   - [ ] Implement MCP-specific error handling
 - [ ] Create system information and status endpoints
 - [ ] Build token price and basic stats endpoints
-- [ ] Implement authentication layer
+- [ ] Implement authentication layer with API keys and rate limiting as described
 - [ ] Deploy initial MCP server for testing with Claude Desktop
 - [ ] Test with multiple AI assistants beyond Claude
 - [ ] Develop historical data endpoints with customizable timeframes
 - [ ] Create governance data access endpoints
 - [ ] Document MCP API for AI assistant developers
+- [ ] Implement the natural language interface described in the system architecture
 
 ## Phase 6: Monitoring & Observability
 
 - ✅ Implement basic logging throughout core components
-- [ ] Develop comprehensive monitoring strategy
+- [ ] Develop comprehensive monitoring strategy as detailed in the system architecture
   - [ ] Create custom metrics for key performance indicators
   - [ ] Set up alerting for critical failures and performance degradation
   - [ ] Implement user analytics for dashboard usage patterns
@@ -244,6 +345,9 @@
   - [ ] Incident response procedures
   - [ ] Troubleshooting guides for common issues
   - [ ] Performance tuning recommendations
+- [ ] Implement the error tracking and reporting system described in the architecture
+- [ ] Set up the performance monitoring infrastructure as planned
+- [ ] Configure the webhook health monitoring and alerting system
 
 ## Phase 7: Integration and Optimization
 
@@ -271,12 +375,16 @@
 
 ### Documentation
 - [ ] Create comprehensive README files for each package
-- [ ] Document all public APIs with JSDoc/TSDoc
+- [ ] Document all public APIs with JSDoc/TSDoc as specified in the implementation plan
 - [ ] Create setup and contribution guides
 - [ ] Document deployment procedures
 - [ ] Document all environment variables and configuration options
 - [ ] Create troubleshooting guides for common issues
 - [ ] Document performance expectations and limitations
+- [ ] Generate OpenAPI/Swagger specifications as described in the system architecture
+- [ ] Create architectural decision records (ADRs) for key design decisions
+- [ ] Write Base node operator documentation as detailed in the webhook integration plan
+- [ ] Develop the MCP API documentation for AI assistant developers
 
 ### Deployment
 - [ ] Set up staging environment
@@ -290,15 +398,18 @@
 ## Special Considerations
 
 ### Base Webhook Integration
-- [ ] Develop event processor module
+- [ ] Develop event processor module as detailed in the system architecture
   - [ ] Token transfer processing
   - [ ] Pool update handling
   - [ ] Governance event processing
-- [ ] Create webhook configuration interface
+- [ ] Create webhook configuration interface with API key management
 - [ ] Write Base node operator documentation
-- [ ] Implement webhook monitoring
+- [ ] Implement webhook monitoring dashboard
 - [ ] Create persistent storage for webhook data
 - [ ] Implement webhook replay capability for recovery
+- [ ] Build the secure signature verification system described in the architecture
+- [ ] Implement the full webhook handler Netlify Function according to specifications
+- [ ] Create the event queue/processor as detailed in the architecture
 
 ### Backward Compatibility
 - ✅ Ensure Frame continues to function during transition

@@ -1,7 +1,29 @@
-[build]
-  publish = "public"
-  functions = "netlify/functions"
+# Consolidated netlify.toml for PageDAO Hub
+# Combined from:
+# - Root netlify.toml
+# - pagedao-hub/packages/api/netlify.toml
+# - pagedao-hub/packages/netlify.toml
 
+[build]
+  command = "pnpm run build"  # Use monorepo build script
+  functions = "netlify/functions"
+  publish = "packages/dashboard/dist"  # Serve the dashboard frontend
+
+# Development settings
+[dev]
+  command = "pnpm run dev"  # Run dev command from root package.json
+  port = 8888
+  targetPort = 3000
+  framework = "#custom"
+  autoLaunch = true
+
+# Redirect API endpoints to Netlify Functions
+[[redirects]]
+  from = "/api/v1/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Original Frame endpoints
 [[redirects]]
   from = "/frame"
   to = "/.netlify/functions/frame"
@@ -17,10 +39,34 @@
   to = "/.netlify/functions/trade"
   status = 200
 
+# Token API endpoints
+[[redirects]]
+  from = "/api/v1/token/price"
+  to = "/.netlify/functions/token-price"
+  status = 200
 
+[[redirects]]
+  from = "/api/v1/token/price/*"
+  to = "/.netlify/functions/token-price/:splat"
+  status = 200
+
+# Liquidity API endpoints
+[[redirects]]
+  from = "/api/v1/liquidity/tvl"
+  to = "/.netlify/functions/liquidity-tvl"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/liquidity/tvl/*"
+  to = "/.netlify/functions/liquidity-tvl/:splat"
+  status = 200
+
+# Redirect all other routes to index.html for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Function bundle settings
 [functions]
   node_bundler = "esbuild"
-
-[dev]
-  framework = "#static"
-  autoLaunch = true
