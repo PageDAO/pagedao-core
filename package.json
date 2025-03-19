@@ -5,10 +5,11 @@
     "packages/*"
   ],
   "scripts": {
-  "dev": "concurrently \"pnpm run dev:core\" \"pnpm run dev:api\" \"pnpm run dev:dashboard\"",
-  "dev:core": "pnpm --filter @pagedao/core run dev",
-  "dev:api": "cd packages/api && netlify dev --port 7777",
-  "dev:dashboard": "pnpm --filter dashboard run dev -- --port 3002"
+    "build": "sh netlify-build.sh",
+    "dev": "concurrently \"pnpm run dev:core\" \"pnpm run dev:api\" \"pnpm run dev:dashboard\"",
+    "dev:core": "pnpm --filter @pagedao/core run dev",
+    "dev:api": "cd packages/api && netlify dev --port 7777",
+    "dev:dashboard": "pnpm --filter dashboard run dev -- --port 3002"
   },
   "keywords": [
     "pagedao",
