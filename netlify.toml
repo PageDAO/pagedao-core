@@ -64,5 +64,5 @@
 # Function bundle settings
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["ethers", "canvas", "@pagedao/core", "zod", "axios"]
+  external_node_modules = ["ethers", "canvas", "zod", "axios"]
   included_files = ["packages/core/dist/**", "packages/core/package.json"]
