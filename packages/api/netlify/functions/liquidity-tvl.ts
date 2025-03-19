@@ -1,6 +1,6 @@
 // packages/api/netlify/functions/liquidity-tvl.ts
 import { Handler } from '@netlify/functions';
-import { fetchPagePrices, getSupportedChains } from '@pagedao/core';
+import { getSupportedChains } from '@pagedao/core';
 
 interface TVLResponse {
   tvl: number;

@@ -1,5 +1,5 @@
 // packages/core/src/providers/index.ts
-import * as ethers from 'ethers';
+import { providers } from 'ethers';
 import { getChainRPC } from '../config';
 
 // Simple logging utility
@@ -16,7 +16,7 @@ const logger = {
 };
 
 // Provider cache to avoid creating multiple instances
-const providerCache: Record<string, ethers.providers.JsonRpcProvider
+const providerCache: Record<string, providers.JsonRpcProvider
 
 > = {};
 
@@ -25,7 +25,7 @@ const providerCache: Record<string, ethers.providers.JsonRpcProvider
  * @param chain - Chain identifier (ethereum, optimism, base)
  * @returns JsonRpcProvider instance
  */
-export async function getProvider(chain: string): Promise<ethers.providers.JsonRpcProvider
+export async function getProvider(chain: string): Promise<providers.JsonRpcProvider
 
 > {
   // Check if we have a cached provider
@@ -44,7 +44,7 @@ export async function getProvider(chain: string): Promise<ethers.providers.JsonR
   
   try {
     logger.info(`Creating new provider for ${chain} using primary RPC`);
-    const provider = new ethers.providers.JsonRpcProvider
+    const provider = new providers.JsonRpcProvider
 
     (primaryRpcUrl);
     
@@ -64,7 +64,7 @@ export async function getProvider(chain: string): Promise<ethers.providers.JsonR
     
     try {
       logger.info(`Creating new provider for ${chain} using backup RPC`);
-      const backupProvider = new ethers.providers.JsonRpcProvider
+      const backupProvider = new providers.JsonRpcProvider
 
       (backupRpcUrl);
       
@@ -108,7 +108,7 @@ export async function getProviderWithRetry(
   chain: string,
   maxRetries: number = 3,
   initialDelay: number = 1000
-): Promise<ethers.providers.JsonRpcProvider
+): Promise<providers.JsonRpcProvider
 
 > {
   let retries = 0;

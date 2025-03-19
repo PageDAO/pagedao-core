@@ -1,4 +1,4 @@
-import * as ethers from 'ethers';
+import { BigNumber, ContractInterface } from 'ethers';
 
 /**
  * Interface for blockchain connector implementations
@@ -18,14 +18,14 @@ export interface BlockchainConnector {
    * Get the balance of an address
    * @param address The address to check
    */
-  getBalance(address: string): Promise<ethers.BigNumber>;
+  getBalance(address: string): Promise<BigNumber>;
   
   /**
    * Get token balance for an ERC20 token
    * @param tokenAddress The token contract address
    * @param ownerAddress The address of the token owner
    */
-  getTokenBalance(tokenAddress: string, ownerAddress: string): Promise<ethers.BigNumber>;
+  getTokenBalance(tokenAddress: string, ownerAddress: string): Promise<BigNumber>;
   
   /**
    * Get token decimals
@@ -43,7 +43,7 @@ export interface BlockchainConnector {
    * Get token total supply
    * @param tokenAddress The token contract address
    */
-  getTokenTotalSupply(tokenAddress: string): Promise<ethers.BigNumber>;
+  getTokenTotalSupply(tokenAddress: string): Promise<BigNumber>;
   
   /**
    * Call a read-only contract method
@@ -54,7 +54,7 @@ export interface BlockchainConnector {
    */
   callContractMethod(
     contractAddress: string,
-    abi: ethers.ContractInterface,
+    abi: ContractInterface,
     methodName: string,
     args?: any[]
   ): Promise<any>;

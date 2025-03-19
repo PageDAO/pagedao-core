@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { z } from 'zod';
-import { ethers } from 'ethers';
+import { utils, BigNumber } from 'ethers';
 
 // Import core functionality
 import { getConnector } from '@pagedao/core/src/connectors';
@@ -68,7 +68,7 @@ async function getTokenSupply(chain: string): Promise<{ total: string, circulati
       const decimals = tokenConfig.decimals;
       
       // Calculate circulating supply by subtracting excluded balances
-      let excludedBalanceBN = ethers.BigNumber.from(0);
+      let excludedBalanceBN = BigNumber.from(0);
       
       for (const address of EXCLUDED_ADDRESSES) {
         const balance = await connector.getTokenBalance(tokenConfig.address, address);
@@ -78,8 +78,8 @@ async function getTokenSupply(chain: string): Promise<{ total: string, circulati
       const circulatingSupplyBN = totalSupplyBN.sub(excludedBalanceBN);
       
       // Format supplies with proper decimals
-      const totalSupply = ethers.utils.formatUnits(totalSupplyBN, decimals);
-      const circulatingSupply = ethers.utils.formatUnits(circulatingSupplyBN, decimals);
+      const totalSupply = utils.formatUnits(totalSupplyBN, decimals);
+      const circulatingSupply = utils.formatUnits(circulatingSupplyBN, decimals);
       
       return {
         total: totalSupply,

@@ -1,4 +1,4 @@
-import * as ethers from 'ethers';
+import { Contract, BigNumber, utils } from 'ethers';
 import { getProvider } from '../providers';
 import { getConnector } from '../connectors';
 import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../abis';
@@ -37,8 +37,8 @@ export interface PoolData {
 
 // Interface for V2 pool reserves
 export interface PoolReserves {
-  reserve0: ethers.BigNumber;
-  reserve1: ethers.BigNumber;
+  reserve0: BigNumber;
+  reserve1: BigNumber;
   blockTimestampLast: number;
   token0?: string;
   token1?: string;
@@ -46,8 +46,8 @@ export interface PoolReserves {
 
 // Interface for V3 pool state
 export interface V3PoolState {
-  liquidity: ethers.BigNumber;
-  sqrtPriceX96: ethers.BigNumber;
+  liquidity: BigNumber;
+  sqrtPriceX96: BigNumber;
   tick: number;
   observationIndex: number;
   observationCardinality: number;
@@ -111,7 +111,7 @@ export async function getPoolData(
 async function getV2PoolReserves(poolAddress: string, chain: string): Promise<PoolReserves> {
   try {
     const provider = await getProvider(chain);
-    const poolContract = new ethers.Contract(poolAddress, UNISWAP_V2_PAIR_ABI, provider);
+    const poolContract = new Contract(poolAddress, UNISWAP_V2_PAIR_ABI, provider);
     
     // Get reserves and token addresses in parallel
     const [reserves, token0, token1] = await Promise.all([
@@ -142,7 +142,7 @@ async function getV2PoolReserves(poolAddress: string, chain: string): Promise<Po
 async function getV3PoolState(poolAddress: string, chain: string): Promise<V3PoolState> {
   try {
     const provider = await getProvider(chain);
-    const poolContract = new ethers.Contract(poolAddress, UNISWAP_V3_POOL_ABI, provider);
+    const poolContract = new Contract(poolAddress, UNISWAP_V3_POOL_ABI, provider);
     
     // Get slot0, liquidity, and token addresses in parallel
     const [slot0, liquidity, token0, token1] = await Promise.all([
@@ -209,13 +209,13 @@ export async function normalizePoolReserves(
     const provider = await getProvider(chain);
     
     // Create token contracts to get decimals and symbols
-    const token0Contract = new ethers.Contract(
+    const token0Contract = new Contract(
       reserves.token0,
       ['function decimals() view returns (uint8)', 'function symbol() view returns (string)'],
       provider
     );
     
-    const token1Contract = new ethers.Contract(
+    const token1Contract = new Contract(
       reserves.token1,
       ['function decimals() view returns (uint8)', 'function symbol() view returns (string)'],
       provider
@@ -230,8 +230,8 @@ export async function normalizePoolReserves(
     ]);
     
     // Normalize the reserves
-    const normalizedReserve0 = parseFloat(ethers.utils.formatUnits(reserves.reserve0, token0Decimals));
-    const normalizedReserve1 = parseFloat(ethers.utils.formatUnits(reserves.reserve1, token1Decimals));
+    const normalizedReserve0 = parseFloat(utils.formatUnits(reserves.reserve0, token0Decimals));
+    const normalizedReserve1 = parseFloat(utils.formatUnits(reserves.reserve1, token1Decimals));
     
     return {
       reserve0: normalizedReserve0,
@@ -337,7 +337,7 @@ export async function getPoolTokenInfo(
     if (poolType === PoolType.V2 || poolType === PoolType.V3) {
       const provider = await getProvider(chain);
       const abi = ['function token0() view returns (address)', 'function token1() view returns (address)'];
-      const poolContract = new ethers.Contract(poolAddress, abi, provider);
+      const poolContract = new Contract(poolAddress, abi, provider);
       
       [token0, token1] = await Promise.all([
         poolContract.token0(),

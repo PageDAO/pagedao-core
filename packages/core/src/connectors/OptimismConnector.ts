@@ -1,4 +1,4 @@
-import * as ethers from 'ethers';
+import { providers } from 'ethers';
 import { getProvider } from '../providers';
 import { BlockchainConnector } from './BlockchainConnector';
 import { EthereumConnector } from './EthereumConnector';

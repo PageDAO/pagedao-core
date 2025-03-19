@@ -1,4 +1,4 @@
-import * as ethers from 'ethers';
+import { providers, Contract, BigNumber, ContractInterface } from 'ethers';
 import { getProvider } from '../providers';
 import { BlockchainConnector } from './BlockchainConnector';
 
@@ -41,7 +41,7 @@ export class EthereumConnector implements BlockchainConnector {
   /**
    * Get the provider for this chain
    */
-  private async getChainProvider(): Promise<ethers.providers.JsonRpcProvider> {
+  private async getChainProvider(): Promise<providers.JsonRpcProvider> {
     return getProvider(this.chainName);
   }
   
@@ -76,7 +76,7 @@ export class EthereumConnector implements BlockchainConnector {
    * Get the balance of an address
    * @param address The address to check
    */
-  async getBalance(address: string): Promise<ethers.BigNumber> {
+  async getBalance(address: string): Promise<BigNumber> {
     try {
       const provider = await this.getChainProvider();
       return provider.getBalance(address);
@@ -91,10 +91,10 @@ export class EthereumConnector implements BlockchainConnector {
    * @param tokenAddress The token contract address
    * @param ownerAddress The address of the token owner
    */
-  async getTokenBalance(tokenAddress: string, ownerAddress: string): Promise<ethers.BigNumber> {
+  async getTokenBalance(tokenAddress: string, ownerAddress: string): Promise<BigNumber> {
     try {
       const provider = await this.getChainProvider();
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+      const tokenContract = new Contract(tokenAddress, ERC20_ABI, provider);
       return tokenContract.balanceOf(ownerAddress);
     } catch (error) {
       logger.error(`Failed to get token balance for ${ownerAddress} on token ${tokenAddress}`, error);
@@ -109,7 +109,7 @@ export class EthereumConnector implements BlockchainConnector {
   async getTokenDecimals(tokenAddress: string): Promise<number> {
     try {
       const provider = await this.getChainProvider();
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+      const tokenContract = new Contract(tokenAddress, ERC20_ABI, provider);
       return tokenContract.decimals();
     } catch (error) {
       logger.error(`Failed to get token decimals for ${tokenAddress}`, error);
@@ -124,7 +124,7 @@ export class EthereumConnector implements BlockchainConnector {
   async getTokenSymbol(tokenAddress: string): Promise<string> {
     try {
       const provider = await this.getChainProvider();
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+      const tokenContract = new Contract(tokenAddress, ERC20_ABI, provider);
       return tokenContract.symbol();
     } catch (error) {
       logger.error(`Failed to get token symbol for ${tokenAddress}`, error);
@@ -136,10 +136,10 @@ export class EthereumConnector implements BlockchainConnector {
    * Get token total supply
    * @param tokenAddress The token contract address
    */
-  async getTokenTotalSupply(tokenAddress: string): Promise<ethers.BigNumber> {
+  async getTokenTotalSupply(tokenAddress: string): Promise<BigNumber> {
     try {
       const provider = await this.getChainProvider();
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+      const tokenContract = new Contract(tokenAddress, ERC20_ABI, provider);
       return tokenContract.totalSupply();
     } catch (error) {
       logger.error(`Failed to get token total supply for ${tokenAddress}`, error);
@@ -156,13 +156,13 @@ export class EthereumConnector implements BlockchainConnector {
    */
   async callContractMethod(
     contractAddress: string,
-    abi: ethers.ContractInterface,
+    abi: ContractInterface,
     methodName: string,
     args: any[] = []
   ): Promise<any> {
     try {
       const provider = await this.getChainProvider();
-      const contract = new ethers.Contract(contractAddress, abi, provider);
+      const contract = new Contract(contractAddress, abi, provider);
       
       if (!contract[methodName]) {
         throw new Error(`Method ${methodName} not found in contract ABI`);

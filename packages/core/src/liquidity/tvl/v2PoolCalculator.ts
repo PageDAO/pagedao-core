@@ -1,4 +1,4 @@
-import * as ethers from 'ethers';
+import { Contract, utils, BigNumber } from 'ethers';
 import { PoolReserves } from '../poolService';
 import { getProvider } from '../../providers';
 
@@ -45,8 +45,8 @@ export async function calculateV2PoolTVL(
     const provider = await getProvider(chain);
     
     // Create token contracts to get decimals
-    const token0Contract = new ethers.Contract(poolReserves.token0, ERC20_ABI, provider);
-    const token1Contract = new ethers.Contract(poolReserves.token1, ERC20_ABI, provider);
+    const token0Contract = new Contract(poolReserves.token0, ERC20_ABI, provider);
+    const token1Contract = new Contract(poolReserves.token1, ERC20_ABI, provider);
     
     // Get token decimals
     const [token0Decimals, token1Decimals] = await Promise.all([
@@ -55,8 +55,8 @@ export async function calculateV2PoolTVL(
     ]);
     
     // Convert reserves to decimal values
-    const reserve0Decimal = parseFloat(ethers.utils.formatUnits(poolReserves.reserve0, token0Decimals));
-    const reserve1Decimal = parseFloat(ethers.utils.formatUnits(poolReserves.reserve1, token1Decimals));
+    const reserve0Decimal = parseFloat(utils.formatUnits(poolReserves.reserve0, token0Decimals));
+    const reserve1Decimal = parseFloat(utils.formatUnits(poolReserves.reserve1, token1Decimals));
     
     // Calculate TVL components
     const token0TVL = reserve0Decimal * token0Price;
@@ -81,16 +81,16 @@ export async function calculateV2PoolTVL(
  * A more optimized version when token details are already known
  */
 export function calculateV2PoolTVLWithDecimals(
-  reserve0: ethers.BigNumber,
-  reserve1: ethers.BigNumber,
+  reserve0: BigNumber,
+  reserve1: BigNumber,
   token0Decimals: number,
   token1Decimals: number,
   token0Price: number,
   token1Price: number
 ): number {
   // Convert reserves to decimal values
-  const reserve0Decimal = parseFloat(ethers.utils.formatUnits(reserve0, token0Decimals));
-  const reserve1Decimal = parseFloat(ethers.utils.formatUnits(reserve1, token1Decimals));
+  const reserve0Decimal = parseFloat(utils.formatUnits(reserve0, token0Decimals));
+  const reserve1Decimal = parseFloat(utils.formatUnits(reserve1, token1Decimals));
   
   // Calculate TVL components
   const token0TVL = reserve0Decimal * token0Price;
@@ -139,8 +139,8 @@ export async function calculateV2PoolRatio(
     const provider = await getProvider(chain);
     
     // Create token contracts to get decimals and symbols
-    const token0Contract = new ethers.Contract(poolReserves.token0, ERC20_ABI, provider);
-    const token1Contract = new ethers.Contract(poolReserves.token1, ERC20_ABI, provider);
+    const token0Contract = new Contract(poolReserves.token0, ERC20_ABI, provider);
+    const token1Contract = new Contract(poolReserves.token1, ERC20_ABI, provider);
     
     // Get token details
     const [token0Decimals, token1Decimals, token0Symbol, token1Symbol] = await Promise.all([
@@ -151,8 +151,8 @@ export async function calculateV2PoolRatio(
     ]);
     
     // Convert reserves to decimal values
-    const token0Amount = parseFloat(ethers.utils.formatUnits(poolReserves.reserve0, token0Decimals));
-    const token1Amount = parseFloat(ethers.utils.formatUnits(poolReserves.reserve1, token1Decimals));
+    const token0Amount = parseFloat(utils.formatUnits(poolReserves.reserve0, token0Decimals));
+    const token1Amount = parseFloat(utils.formatUnits(poolReserves.reserve1, token1Decimals));
     
     // Calculate ratio (token1 per token0)
     const ratio = token1Amount / token0Amount;

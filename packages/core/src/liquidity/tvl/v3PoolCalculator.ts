@@ -1,4 +1,4 @@
-import * as ethers from 'ethers';
+import { Contract, BigNumber } from 'ethers';
 import { V3PoolState } from '../poolService';
 import { getProvider } from '../../providers';
 
@@ -45,8 +45,8 @@ export async function calculateV3PoolTVL(
     const provider = await getProvider(chain);
     
     // Create token contracts to get decimals and symbols
-    const token0Contract = new ethers.Contract(poolState.token0, ERC20_ABI, provider);
-    const token1Contract = new ethers.Contract(poolState.token1, ERC20_ABI, provider);
+    const token0Contract = new Contract(poolState.token0, ERC20_ABI, provider);
+    const token1Contract = new Contract(poolState.token1, ERC20_ABI, provider);
     
     // Get token details
     const [token0Decimals, token1Decimals, token0Symbol, token1Symbol] = await Promise.all([
@@ -95,8 +95,8 @@ export async function calculateV3PoolTVL(
  * @returns The amounts of token0 and token1 in the pool
  */
 export function calculateTokenAmountsFromLiquidity(
-  sqrtPriceX96: ethers.BigNumber,
-  liquidity: ethers.BigNumber,
+  sqrtPriceX96: BigNumber,
+  liquidity: BigNumber,
   token0Decimals: number,
   token1Decimals: number
 ): { amount0: number, amount1: number } {
@@ -137,7 +137,7 @@ export function calculateTokenAmountsFromLiquidity(
  * @returns The price of token1 in terms of token0
  */
 export function calculatePriceFromSqrtP(
-  sqrtPriceX96: ethers.BigNumber,
+  sqrtPriceX96: BigNumber,
   token0Decimals: number,
   token1Decimals: number
 ): number {
@@ -220,7 +220,7 @@ export async function getV3PoolTVL(
       'function token1() view returns (address)'
     ];
     
-    const poolContract = new ethers.Contract(poolAddress, poolAbiExtended, provider);
+    const poolContract = new Contract(poolAddress, poolAbiExtended, provider);
     
     // Get all pool data in parallel
     const [slot0, liquidity, token0, token1] = await Promise.all([
@@ -232,8 +232,8 @@ export async function getV3PoolTVL(
     
     // Create contracts for tokens
     const erc20Abi = ['function decimals() view returns (uint8)', 'function symbol() view returns (string)'];
-    const token0Contract = new ethers.Contract(token0, erc20Abi, provider);
-    const token1Contract = new ethers.Contract(token1, erc20Abi, provider);
+    const token0Contract = new Contract(token0, erc20Abi, provider);
+    const token1Contract = new Contract(token1, erc20Abi, provider);
     
     // Get token details
     const [token0Decimals, token1Decimals, token0Symbol, token1Symbol] = await Promise.all([

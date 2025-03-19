@@ -1,4 +1,4 @@
-import * as ethers from 'ethers';
+import { BigNumber, ContractInterface } from 'ethers';
 import { BlockchainConnector } from './BlockchainConnector';
 
 // Logger setup
@@ -86,7 +86,7 @@ export class OsmosisConnector implements BlockchainConnector {
    * Get the balance of an address
    * @param address The address to check
    */
-  async getBalance(address: string): Promise<ethers.BigNumber> {
+  async getBalance(address: string): Promise<BigNumber> {
     try {
       const response = await fetch(`${this.baseUrl}/cosmos/bank/v1beta1/balances/${address}`);
       
@@ -100,10 +100,10 @@ export class OsmosisConnector implements BlockchainConnector {
       const osmoBalance = data.balances.find((b: any) => b.denom === 'uosmo');
       
       if (!osmoBalance) {
-        return ethers.BigNumber.from(0);
+        return BigNumber.from(0);
       }
       
-      return ethers.BigNumber.from(osmoBalance.amount);
+      return BigNumber.from(osmoBalance.amount);
     } catch (error) {
       logger.error(`Failed to get Osmosis balance for ${address}`, error);
       throw new Error(`Failed to get Osmosis balance: ${(error as Error).message}`);
@@ -115,7 +115,7 @@ export class OsmosisConnector implements BlockchainConnector {
    * @param tokenAddress The token denom
    * @param ownerAddress The address of the token owner
    */
-  async getTokenBalance(tokenAddress: string, ownerAddress: string): Promise<ethers.BigNumber> {
+  async getTokenBalance(tokenAddress: string, ownerAddress: string): Promise<BigNumber> {
     try {
       const response = await fetch(`${this.baseUrl}/cosmos/bank/v1beta1/balances/${ownerAddress}`);
       
@@ -129,10 +129,10 @@ export class OsmosisConnector implements BlockchainConnector {
       const tokenBalance = data.balances.find((b: any) => b.denom === tokenAddress);
       
       if (!tokenBalance) {
-        return ethers.BigNumber.from(0);
+        return BigNumber.from(0);
       }
       
-      return ethers.BigNumber.from(tokenBalance.amount);
+      return BigNumber.from(tokenBalance.amount);
     } catch (error) {
       logger.error(`Failed to get Osmosis token balance for ${ownerAddress}`, error);
       throw new Error(`Failed to get Osmosis token balance: ${(error as Error).message}`);
@@ -194,7 +194,7 @@ export class OsmosisConnector implements BlockchainConnector {
    * Get token total supply
    * @param tokenAddress The token denom
    */
-  async getTokenTotalSupply(tokenAddress: string): Promise<ethers.BigNumber> {
+  async getTokenTotalSupply(tokenAddress: string): Promise<BigNumber> {
     try {
       const response = await fetch(`${this.baseUrl}/cosmos/bank/v1beta1/supply/${tokenAddress}`);
       
@@ -203,7 +203,7 @@ export class OsmosisConnector implements BlockchainConnector {
       }
       
       const data = await response.json();
-      return ethers.BigNumber.from(data.amount.amount);
+      return BigNumber.from(data.amount.amount);
     } catch (error) {
       logger.error(`Failed to get Osmosis token supply for ${tokenAddress}`, error);
       throw new Error(`Failed to get Osmosis token supply: ${(error as Error).message}`);
@@ -217,7 +217,7 @@ export class OsmosisConnector implements BlockchainConnector {
    */
   async callContractMethod(
     contractAddress: string,
-    abi: ethers.ContractInterface,
+    abi: ContractInterface,
     methodName: string,
     args: any[] = []
   ): Promise<any> {

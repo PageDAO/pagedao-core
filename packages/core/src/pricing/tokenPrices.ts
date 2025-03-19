@@ -1,5 +1,5 @@
 // packages/core/src/pricing/tokenPrices.ts
-import * as ethers from 'ethers';
+import { Contract, utils, BigNumber } from 'ethers';
 import axios from 'axios';
 import { getProvider } from '../providers';
 import { getTokenConfig, getSupportedChains } from '../config';
@@ -90,7 +90,7 @@ async function fetchEthPrice(): Promise<number> {
     const provider = await getProvider('base');
     
     // Create contract instance with V3 ABI
-    const poolContract = new ethers.Contract(
+    const poolContract = new Contract(
       '0xd0b53D9277642d899DF5C87A3966A349A798F224', // ETH/USDC pair on Base
       UNISWAP_V3_POOL_ABI, 
       provider
@@ -172,7 +172,7 @@ async function fetchEthereumPagePrice(ethPrice: number): Promise<number> {
     }
     
     // Create contract instance for the pool
-    const poolContract = new ethers.Contract(
+    const poolContract = new Contract(
       tokenConfig.pool.address,
       UNISWAP_V2_PAIR_ABI,
       provider
@@ -185,8 +185,8 @@ async function fetchEthereumPagePrice(ethPrice: number): Promise<number> {
     
     // Get token contracts to get decimals
     const erc20Abi = ['function decimals() view returns (uint8)'];
-    const token0Contract = new ethers.Contract(token0, erc20Abi, provider);
-    const token1Contract = new ethers.Contract(token1, erc20Abi, provider);
+    const token0Contract = new Contract(token0, erc20Abi, provider);
+    const token1Contract = new Contract(token1, erc20Abi, provider);
     
     // Get token decimals
     const [token0Decimals, token1Decimals] = await Promise.all([
@@ -198,8 +198,8 @@ async function fetchEthereumPagePrice(ethPrice: number): Promise<number> {
     const pageIsToken0 = tokenConfig.pool.tokenIsToken0;
     
     // Convert reserves to decimal
-    const token0Amount = parseFloat(ethers.utils.formatUnits(reserves[0], token0Decimals));
-    const token1Amount = parseFloat(ethers.utils.formatUnits(reserves[1], token1Decimals));
+    const token0Amount = parseFloat(utils.formatUnits(reserves[0], token0Decimals));
+    const token1Amount = parseFloat(utils.formatUnits(reserves[1], token1Decimals));
     
     // Calculate PAGE price based on ETH price
     let pagePrice: number;
@@ -241,7 +241,7 @@ async function fetchOptimismPagePrice(ethPrice: number): Promise<number> {
     }
     
     // Similar implementation to Ethereum but for Optimism pools
-    const poolContract = new ethers.Contract(
+    const poolContract = new Contract(
       tokenConfig.pool.address,
       UNISWAP_V2_PAIR_ABI,
       provider
@@ -254,8 +254,8 @@ async function fetchOptimismPagePrice(ethPrice: number): Promise<number> {
     
     // Get token contracts to get decimals
     const erc20Abi = ['function decimals() view returns (uint8)'];
-    const token0Contract = new ethers.Contract(token0, erc20Abi, provider);
-    const token1Contract = new ethers.Contract(token1, erc20Abi, provider);
+    const token0Contract = new Contract(token0, erc20Abi, provider);
+    const token1Contract = new Contract(token1, erc20Abi, provider);
     
     // Get token decimals
     const [token0Decimals, token1Decimals] = await Promise.all([
@@ -267,8 +267,8 @@ async function fetchOptimismPagePrice(ethPrice: number): Promise<number> {
     const pageIsToken0 = tokenConfig.pool.tokenIsToken0;
     
     // Convert reserves to decimal
-    const token0Amount = parseFloat(ethers.utils.formatUnits(reserves[0], token0Decimals));
-    const token1Amount = parseFloat(ethers.utils.formatUnits(reserves[1], token1Decimals));
+    const token0Amount = parseFloat(utils.formatUnits(reserves[0], token0Decimals));
+    const token1Amount = parseFloat(utils.formatUnits(reserves[1], token1Decimals));
     
     // Calculate PAGE price based on ETH price
     let pagePrice: number;
@@ -310,7 +310,7 @@ async function fetchBasePagePrice(ethPrice: number): Promise<number> {
     }
     
     // Create contract instance for the V3 pool
-    const poolContract = new ethers.Contract(
+    const poolContract = new Contract(
       tokenConfig.pool.address,
       UNISWAP_V3_POOL_ABI,
       provider
@@ -326,8 +326,8 @@ async function fetchBasePagePrice(ethPrice: number): Promise<number> {
     
     // Get token contracts to get decimals
     const erc20Abi = ['function decimals() view returns (uint8)'];
-    const token0Contract = new ethers.Contract(token0, erc20Abi, provider);
-    const token1Contract = new ethers.Contract(token1, erc20Abi, provider);
+    const token0Contract = new Contract(token0, erc20Abi, provider);
+    const token1Contract = new Contract(token1, erc20Abi, provider);
     
     // Get token decimals
     const [token0Decimals, token1Decimals] = await Promise.all([
