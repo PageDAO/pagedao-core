@@ -55,4 +55,15 @@ export interface BlockchainConnector {
     minLiquidityThreshold?: number;
     manualWeights?: Record<ChainId, number>;
   }
+
+  // Price data structure with information across chains
+export interface PriceData {
+  ethereum: number;
+  optimism: number;
+  base: number;
+  osmosis: number;
+  ethPrice: number;
+  osmosisTVL: number;
+  timestamp: number;
+}
   

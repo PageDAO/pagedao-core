@@ -12,7 +12,7 @@
   "dependencies": {
     "axios": "^1.8.2",
     "canvas": "^3.1.0",
-    "ethers": "^6.13.5"
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@netlify/functions": "^3.0.1",

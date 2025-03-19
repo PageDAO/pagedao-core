@@ -1,5 +1,5 @@
 // src/state/types.ts
-import { ChainId } from '@pagedao/core';
+import { ChainId } from './index';
 
 export interface TokenPrice {
   price: number;
