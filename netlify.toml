@@ -64,4 +64,8 @@
 # Function bundle settings
 [functions]
   node_bundler = "esbuild"
-  included_files = ["packages/core/dist/**"]
+  included_files = [
+    "packages/core/dist/**", 
+    "packages/core/package.json",
+    "node_modules/**"
+  ]
