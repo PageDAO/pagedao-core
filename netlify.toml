@@ -9,17 +9,15 @@
   # Location of Netlify Functions
   functions = "pagedao-api/functions"
 
-# Environment variables for the build
 [build.environment]
-  # Node version
   NODE_VERSION = "18"
-  # API configuration
+  NPM_FLAGS = "--prefix=/dev/null"
   VITE_API_URL = "/api"
 
 # Process functions with esbuild
 [functions]
   node_bundler = "esbuild"
-  # Include node_modules in the function bundle
+  external_node_modules = ["@pagedao/core"]
   included_files = ["node_modules/**"]
 
 # Install dependencies for functions

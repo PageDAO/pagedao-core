@@ -1,5 +1,5 @@
-// functions/historical-data/index.js
-const { fetchPagePrices } = require('./utils/core');
+const { fetchPagePrices, fetchAllTVL, calculateTVLWeights } = require('@pagedao/core');
+
 
 // Simple in-memory storage for historical data
 // In a production environment, this would be replaced with a database
