@@ -7,7 +7,7 @@
       "strict": true,
       "outDir": "dist",
       "sourceMap": true,
-      "rootDir": "."
+      "rootDir": "netlify/functions"
     },
     "include": ["netlify/functions/**/*"],
     "exclude": ["node_modules", "dist"]
