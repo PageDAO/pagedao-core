@@ -1,16 +1,38 @@
+# Main build configuration
 [build]
-  base = "pagedao-dashboard/"
-  command = "npm run build"
-  publish = "dist/"
-  functions = "../pagedao-api/functions"
+  # Build from the root directory
+  base = "/"
+  # Build the dashboard
+  command = "cd pagedao-dashboard && npm install && npm run build"
+  # Publish the dashboard build
+  publish = "pagedao-dashboard/dist"
+  # Location of Netlify Functions
+  functions = "pagedao-api/functions"
 
-# Redirect API requests to the functions
+# Environment variables for the build
+[build.environment]
+  # Node version
+  NODE_VERSION = "18"
+  # API configuration
+  VITE_API_URL = "/api"
+
+# Process functions with esbuild
+[functions]
+  node_bundler = "esbuild"
+  # Include node_modules in the function bundle
+  included_files = ["node_modules/**"]
+
+# Install dependencies for functions
+[build.processing.functions]
+  included_files = ["node_modules/**"]
+
+# API redirects
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
-# SPA fallback for the dashboard
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
