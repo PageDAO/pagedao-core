@@ -8,7 +8,7 @@
 
 [build]
   command = "npx pnpm install && bash netlify-build.sh"
-  functions = "netlify/functions"
+  functions = "packages/api/netlify/functions"
   publish = "packages/dashboard/dist"
 
 # Redirect API endpoints to Netlify Functions
