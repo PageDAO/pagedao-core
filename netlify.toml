@@ -1,15 +1,15 @@
 # Consolidated netlify.toml for PageDAO Hub
 
-[build]
-  command = "pnpm run build"  # Use monorepo build script
-  functions = "netlify/functions"
-  publish = "packages/dashboard/dist"  # Serve the dashboard frontend
-
-
 
 # Environment variable injection
 [build.environment]
   NODE_VERSION = "18"
+  NPM_FLAGS = "--version" # This prevents npm from running extra commands
+
+[build]
+  command = "npx pnpm install --frozen-lockfile && bash netlify-build.sh"
+  functions = "netlify/functions"
+  publish = "packages/dashboard/dist"
 
 # Redirect API endpoints to Netlify Functions
 [[redirects]]
