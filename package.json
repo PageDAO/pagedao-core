@@ -1,18 +1,27 @@
 {
-  "name": "functions",
+  "name": "pagedao-hub",
   "version": "1.0.0",
-  "main": "frame.js",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "pnpm -r run build",
-    "dev": "pnpm -r run dev"
+  "dev": "concurrently \"pnpm run dev:core\" \"pnpm run dev:api\" \"pnpm run dev:dashboard\"",
+  "dev:core": "pnpm --filter @pagedao/core run dev",
+  "dev:api": "cd packages/api && netlify dev --port 7777",
+  "dev:dashboard": "pnpm --filter dashboard run dev -- --port 3002"
   },
-  "keywords": [],
+  "keywords": [
+    "pagedao",
+    "ethereum",
+    "optimism",
+    "base",
+    "osmosis"
+  ],
   "author": {
     "name": "PageDAO"
   },
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
+  "description": "A comprehensive dashboard and API suite for the PageDAO ecosystem",
   "dependencies": {
     "axios": "^1.8.2",
     "canvas": "^3.1.0",
@@ -22,6 +31,7 @@
   "devDependencies": {
     "@netlify/functions": "^3.0.1",
     "@types/node": "^22.13.10",
+    "concurrently": "^8.2.2",
     "netlify-lambda": "^2.0.16",
     "typescript": "^5.8.2"
   }

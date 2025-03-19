@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import { BlockchainConnector } from './BlockchainConnector';
 
 // Logger setup

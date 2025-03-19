@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import { getProvider } from '../providers';
 import { BlockchainConnector } from './BlockchainConnector';
 
@@ -41,7 +41,7 @@ export class EthereumConnector implements BlockchainConnector {
   /**
    * Get the provider for this chain
    */
-  private async getChainProvider(): Promise<ethers.JsonRpcProvider> {
+  private async getChainProvider(): Promise<ethers.providers.JsonRpcProvider> {
     return getProvider(this.chainName);
   }
   

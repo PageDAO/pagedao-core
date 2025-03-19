@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import { getProvider } from '../providers';
 import { getConnector } from '../connectors';
 import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../abis';
@@ -230,8 +230,8 @@ export async function normalizePoolReserves(
     ]);
     
     // Normalize the reserves
-    const normalizedReserve0 = parseFloat(ethers.formatUnits(reserves.reserve0, token0Decimals));
-    const normalizedReserve1 = parseFloat(ethers.formatUnits(reserves.reserve1, token1Decimals));
+    const normalizedReserve0 = parseFloat(ethers.utils.formatUnits(reserves.reserve0, token0Decimals));
+    const normalizedReserve1 = parseFloat(ethers.utils.formatUnits(reserves.reserve1, token1Decimals));
     
     return {
       reserve0: normalizedReserve0,

@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 
 // Import core functionality
 import { getConnector } from '@pagedao/core/src/connectors';
-import { PAGE_TOKEN_CONFIG } from './utils/tokenConfig';
+import config from '@pagedao/core/src/config';
 
 // Logger setup
 const logger = {
@@ -40,7 +40,7 @@ async function getTokenSupply(chain: string): Promise<{ total: string, circulati
     logger.info(`Fetching token supply for chain: ${chain}`);
     
     // Find token config for this chain
-    const tokenConfig = PAGE_TOKEN_CONFIG.find(token => token.chain === chain);
+    const tokenConfig = config.tokens.PAGE[chain as keyof typeof config.tokens.PAGE];
     
     if (!tokenConfig) {
       throw new Error(`No token configuration found for chain: ${chain}`);
@@ -49,36 +49,50 @@ async function getTokenSupply(chain: string): Promise<{ total: string, circulati
     // Get connector for this chain
     const connector = getConnector(chain);
     
-    // Get total supply
-    const totalSupplyBN = await connector.getTokenTotalSupply(tokenConfig.address);
-    
-    // Get token decimals
-    const decimals = await connector.getTokenDecimals(tokenConfig.address);
-    
-    // Calculate circulating supply by subtracting excluded balances
-    let excludedBalanceBN = ethers.BigNumber.from(0);
-    
-    for (const address of EXCLUDED_ADDRESSES) {
-      const balance = await connector.getTokenBalance(tokenConfig.address, address);
-      excludedBalanceBN = excludedBalanceBN.add(balance);
+    // Check if it's a Cosmos chain (like Osmosis) or an EVM chain
+    if ('denom' in tokenConfig) {
+      // Handle Cosmos chains (like Osmosis)
+      logger.info(`Fetching token supply for Cosmos chain: ${chain}`);
+      // You might need to implement a different method for Cosmos chains
+      // For now, return placeholder values
+      return {
+        total: "100000000", // Placeholder
+        circulating: "42500000" // Placeholder
+      };
+    } else if ('address' in tokenConfig) {
+      // Handle EVM chains (Ethereum, Optimism, Base)
+      // Get total supply
+      const totalSupplyBN = await connector.getTokenTotalSupply(tokenConfig.address);
+      
+      // Get token decimals
+      const decimals = tokenConfig.decimals;
+      
+      // Calculate circulating supply by subtracting excluded balances
+      let excludedBalanceBN = ethers.BigNumber.from(0);
+      
+      for (const address of EXCLUDED_ADDRESSES) {
+        const balance = await connector.getTokenBalance(tokenConfig.address, address);
+        excludedBalanceBN = excludedBalanceBN.add(balance);
+      }
+      
+      const circulatingSupplyBN = totalSupplyBN.sub(excludedBalanceBN);
+      
+      // Format supplies with proper decimals
+      const totalSupply = ethers.utils.formatUnits(totalSupplyBN, decimals);
+      const circulatingSupply = ethers.utils.formatUnits(circulatingSupplyBN, decimals);
+      
+      return {
+        total: totalSupply,
+        circulating: circulatingSupply
+      };
+    } else {
+      throw new Error(`Invalid token configuration for chain: ${chain}`);
     }
-    
-    const circulatingSupplyBN = totalSupplyBN.sub(excludedBalanceBN);
-    
-    // Format supplies with proper decimals
-    const totalSupply = ethers.utils.formatUnits(totalSupplyBN, decimals);
-    const circulatingSupply = ethers.utils.formatUnits(circulatingSupplyBN, decimals);
-    
-    return {
-      total: totalSupply,
-      circulating: circulatingSupply
-    };
   } catch (error) {
     logger.error(`Error fetching token supply for ${chain}`, error);
     throw error;
   }
 }
-
 const handler: Handler = async (event) => {
   try {
     logger.info(`Received token supply request: ${event.httpMethod} ${event.path}`);

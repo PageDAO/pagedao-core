@@ -1,5 +1,5 @@
 // packages/core/src/pricing/tokenPrices.ts
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import axios from 'axios';
 import { getProvider } from '../providers';
 import { getTokenConfig, getSupportedChains } from '../config';
@@ -198,8 +198,8 @@ async function fetchEthereumPagePrice(ethPrice: number): Promise<number> {
     const pageIsToken0 = tokenConfig.pool.tokenIsToken0;
     
     // Convert reserves to decimal
-    const token0Amount = parseFloat(ethers.formatUnits(reserves[0], token0Decimals));
-    const token1Amount = parseFloat(ethers.formatUnits(reserves[1], token1Decimals));
+    const token0Amount = parseFloat(ethers.utils.formatUnits(reserves[0], token0Decimals));
+    const token1Amount = parseFloat(ethers.utils.formatUnits(reserves[1], token1Decimals));
     
     // Calculate PAGE price based on ETH price
     let pagePrice: number;
@@ -267,8 +267,8 @@ async function fetchOptimismPagePrice(ethPrice: number): Promise<number> {
     const pageIsToken0 = tokenConfig.pool.tokenIsToken0;
     
     // Convert reserves to decimal
-    const token0Amount = parseFloat(ethers.formatUnits(reserves[0], token0Decimals));
-    const token1Amount = parseFloat(ethers.formatUnits(reserves[1], token1Decimals));
+    const token0Amount = parseFloat(ethers.utils.formatUnits(reserves[0], token0Decimals));
+    const token1Amount = parseFloat(ethers.utils.formatUnits(reserves[1], token1Decimals));
     
     // Calculate PAGE price based on ETH price
     let pagePrice: number;

@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import { PoolReserves } from '../poolService';
 import { getProvider } from '../../providers';
 
@@ -55,8 +55,8 @@ export async function calculateV2PoolTVL(
     ]);
     
     // Convert reserves to decimal values
-    const reserve0Decimal = parseFloat(ethers.formatUnits(poolReserves.reserve0, token0Decimals));
-    const reserve1Decimal = parseFloat(ethers.formatUnits(poolReserves.reserve1, token1Decimals));
+    const reserve0Decimal = parseFloat(ethers.utils.formatUnits(poolReserves.reserve0, token0Decimals));
+    const reserve1Decimal = parseFloat(ethers.utils.formatUnits(poolReserves.reserve1, token1Decimals));
     
     // Calculate TVL components
     const token0TVL = reserve0Decimal * token0Price;
@@ -89,8 +89,8 @@ export function calculateV2PoolTVLWithDecimals(
   token1Price: number
 ): number {
   // Convert reserves to decimal values
-  const reserve0Decimal = parseFloat(ethers.formatUnits(reserve0, token0Decimals));
-  const reserve1Decimal = parseFloat(ethers.formatUnits(reserve1, token1Decimals));
+  const reserve0Decimal = parseFloat(ethers.utils.formatUnits(reserve0, token0Decimals));
+  const reserve1Decimal = parseFloat(ethers.utils.formatUnits(reserve1, token1Decimals));
   
   // Calculate TVL components
   const token0TVL = reserve0Decimal * token0Price;
@@ -151,8 +151,8 @@ export async function calculateV2PoolRatio(
     ]);
     
     // Convert reserves to decimal values
-    const token0Amount = parseFloat(ethers.formatUnits(poolReserves.reserve0, token0Decimals));
-    const token1Amount = parseFloat(ethers.formatUnits(poolReserves.reserve1, token1Decimals));
+    const token0Amount = parseFloat(ethers.utils.formatUnits(poolReserves.reserve0, token0Decimals));
+    const token1Amount = parseFloat(ethers.utils.formatUnits(poolReserves.reserve1, token1Decimals));
     
     // Calculate ratio (token1 per token0)
     const ratio = token1Amount / token0Amount;

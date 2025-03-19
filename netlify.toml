@@ -1,21 +1,15 @@
 # Consolidated netlify.toml for PageDAO Hub
-# Combined from:
-# - Root netlify.toml
-# - pagedao-hub/packages/api/netlify.toml
-# - pagedao-hub/packages/netlify.toml
 
 [build]
   command = "pnpm run build"  # Use monorepo build script
   functions = "netlify/functions"
   publish = "packages/dashboard/dist"  # Serve the dashboard frontend
 
-# Development settings
-[dev]
-  command = "pnpm run dev"  # Run dev command from root package.json
-  port = 8888
-  targetPort = 3000
-  framework = "#custom"
-  autoLaunch = true
+
+
+# Environment variable injection
+[build.environment]
+  NODE_VERSION = "18"
 
 # Redirect API endpoints to Netlify Functions
 [[redirects]]
@@ -70,3 +64,4 @@
 # Function bundle settings
 [functions]
   node_bundler = "esbuild"
+  included_files = ["packages/core/dist/**"]

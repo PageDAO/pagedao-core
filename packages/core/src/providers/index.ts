@@ -1,5 +1,5 @@
 // packages/core/src/providers/index.ts
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import { getChainRPC } from '../config';
 
 // Simple logging utility
@@ -16,14 +16,18 @@ const logger = {
 };
 
 // Provider cache to avoid creating multiple instances
-const providerCache: Record<string, ethers.JsonRpcProvider> = {};
+const providerCache: Record<string, ethers.providers.JsonRpcProvider
+
+> = {};
 
 /**
  * Get a provider for the specified chain with fallback to backup RPC
  * @param chain - Chain identifier (ethereum, optimism, base)
  * @returns JsonRpcProvider instance
  */
-export async function getProvider(chain: string): Promise<ethers.JsonRpcProvider> {
+export async function getProvider(chain: string): Promise<ethers.providers.JsonRpcProvider
+
+> {
   // Check if we have a cached provider
   if (providerCache[chain]) {
     logger.info(`Using cached provider for ${chain}`);
@@ -40,7 +44,9 @@ export async function getProvider(chain: string): Promise<ethers.JsonRpcProvider
   
   try {
     logger.info(`Creating new provider for ${chain} using primary RPC`);
-    const provider = new ethers.JsonRpcProvider(primaryRpcUrl);
+    const provider = new ethers.providers.JsonRpcProvider
+
+    (primaryRpcUrl);
     
     // Test the provider with a simple call
     await provider.getBlockNumber();
@@ -58,7 +64,9 @@ export async function getProvider(chain: string): Promise<ethers.JsonRpcProvider
     
     try {
       logger.info(`Creating new provider for ${chain} using backup RPC`);
-      const backupProvider = new ethers.JsonRpcProvider(backupRpcUrl);
+      const backupProvider = new ethers.providers.JsonRpcProvider
+
+      (backupRpcUrl);
       
       // Test the backup provider
       await backupProvider.getBlockNumber();
@@ -100,7 +108,9 @@ export async function getProviderWithRetry(
   chain: string,
   maxRetries: number = 3,
   initialDelay: number = 1000
-): Promise<ethers.JsonRpcProvider> {
+): Promise<ethers.providers.JsonRpcProvider
+
+> {
   let retries = 0;
   let delay = initialDelay;
   
