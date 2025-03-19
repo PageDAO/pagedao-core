@@ -7,7 +7,7 @@
   NPM_FLAGS = "--version" # This prevents npm from running extra commands
 
 [build]
-  command = "npx pnpm install --frozen-lockfile && bash netlify-build.sh"
+  command = "npx pnpm install && bash netlify-build.sh"
   functions = "netlify/functions"
   publish = "packages/dashboard/dist"
 
