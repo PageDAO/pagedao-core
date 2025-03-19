@@ -28,14 +28,6 @@ cd packages/dashboard
 pnpm build
 cd ../..
 
-# Create netlify functions directory if it doesn't exist
-echo "Setting up Netlify Functions directory..."
-mkdir -p netlify/functions
-
-# Copy API functions to netlify/functions
-echo "Copying API functions to netlify/functions..."
-cp -r packages/api/netlify/functions/* netlify/functions/
-
 # Copy original Frame functions to netlify/functions (if they exist)
 if [ -d "packages/frame/netlify/functions" ]; then
   echo "Copying Frame functions to netlify/functions..."
