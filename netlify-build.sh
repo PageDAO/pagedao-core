@@ -28,12 +28,6 @@ cd packages/dashboard
 pnpm build
 cd ../..
 
-# Copy original Frame functions to netlify/functions (if they exist)
-if [ -d "packages/frame/netlify/functions" ]; then
-  echo "Copying Frame functions to netlify/functions..."
-  cp -r packages/frame/netlify/functions/* netlify/functions/
-fi
-
 # Create needed directories for dashboard serving
 echo "Setting up public directory..."
 mkdir -p public
