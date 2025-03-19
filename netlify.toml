@@ -63,8 +63,8 @@
 
 # Function bundle settings
 [functions]
-  external_node_modules = ["@pagedao/core"]
   node_bundler = "esbuild"
+  external_node_modules = ["@pagedao/core", "ethers", "canvas"]
   included_files = [
     "packages/core/dist/**", 
     "packages/core/package.json",
