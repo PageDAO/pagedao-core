@@ -7,36 +7,56 @@
 - [x] Outlined core modules organization
 - [x] Planned API endpoints for token metrics
 
+## REVISED APPROACH
+- [x] Decided to move away from monorepo structure to simplify build process
+- [x] Planned separation into three distinct repositories:
+  - pagedao-core: Core library with blockchain connections and calculations
+  - pagedao-api: API endpoints as Netlify Functions
+  - pagedao-dashboard: React dashboard frontend
+
 ## IN PROGRESS
-- [ ] Set up monorepo structure
+- [ ] Extract core functionality from existing codebase
+- [ ] Create standalone pagedao-core package
+- [ ] Implement simplified build process for each component
+
+## TODO: Phase 1 - Core Library (pagedao-core)
+- [ ] Set up standalone repository structure
 - [ ] Extract blockchain connection utilities from page-token-frame
 - [ ] Implement core price calculation services
 - [ ] Set up TVL calculation services
-- [ ] Create API endpoint for token prices
-
-## TODO: Phase 1 - Core Token Metrics
+- [ ] Add proper TypeScript definitions
 - [ ] Implement data caching strategies
-- [ ] Create simple React dashboard skeleton 
+- [ ] Publish as npm package (either public or GitHub packages)
+- [ ] Create comprehensive documentation
+
+## TODO: Phase 2 - API Development (pagedao-api)
+- [ ] Set up API repository with Netlify Functions structure
+- [ ] Create token prices endpoint using pagedao-core
+- [ ] Implement historical data endpoint
+- [ ] Add network comparison endpoint
+- [ ] Set up proper error handling and fallbacks
+- [ ] Implement CORS and security headers
+- [ ] Deploy API to Netlify
+- [ ] Create API documentation
+
+## TODO: Phase 3 - Dashboard Development (pagedao-dashboard)
+- [ ] Set up React dashboard repository
+- [ ] Create simple dashboard skeleton
 - [ ] Implement price chart components
 - [ ] Add TVL visualization components
 - [ ] Implement multi-chain comparison view
-- [ ] Add basic wallet connection
-- [ ] Deploy initial version to production
+- [ ] Create network details pages
+- [ ] Add mobile responsive layouts
+- [ ] Implement theme support (light/dark mode)
+- [ ] Connect to deployed API
+- [ ] Deploy dashboard to Netlify
 
-## TODO: Phase 2 - Dashboard Enhancements
-- [ ] Implement historical data storage
-- [ ] Create time-series charts for price history
-- [ ] Add network distribution visualization
-- [ ] Implement chain switching UI
-- [ ] Create mobile responsive layouts
-- [ ] Add theme support (light/dark mode)
-
-## TODO: Phase 3 - Additional Features (from Whitepaper)
+## TODO: Phase 4 - Integration and Enhancement
+- [ ] Ensure all components work together seamlessly
 - [ ] Add basic market stats (market cap, supply info)
 - [ ] Implement liquidity provider metrics
-- [ ] Create API documentation page
-- [ ] Implement API key management
 - [ ] Add webhook notifications for significant price changes
+- [ ] Set up CI/CD pipelines for all repositories
 
 ## FUTURE PLANS (Post-MVP)
 - [ ] Governance interface
@@ -45,9 +65,29 @@
 - [ ] Staking interface
 - [ ] Creator tools integration
 
+## REPOSITORY STRUCTURE PLAN
+### pagedao-core
+pagedao-core/ ├── src/ │ ├── blockchain/ # Blockchain connectors │ ├── services/ # Price and TVL calculations │ ├── utils/ # Utilities, constants, ABIs │ └── index.ts # Main exports ├── package.json ├── tsconfig.json └── README.md
+
+### pagedao-api
+pagedao-api/ ├── functions/ │ ├── token-prices/ # Token price endpoint │ ├── historical-data/ # Historical data endpoint │ └── utils/ # Shared utilities ├── netlify.toml ├── package.json └── README.md
+
+### pagedao-dashboard
+pagedao-dashboard/ ├── public/ ├── src/ │ ├── components/ # UI components │ ├── pages/ # Dashboard pages │ ├── services/ # API service connectors │ └── utils/ # Frontend utilities ├── package.json ├── netlify.toml └── README.md
+
 ## NOTES
-- Initially focusing on core token price functionality for the four chains
-- Prioritizing reuse of existing code from page-token-frame
-- Using Netlify Functions for serverless API endpoints
-- Need to ensure proper error handling and fallbacks for RPC failures
-- Dashboard should prominently display TVL-weighted average price
+- Each repository will have its own build process and deployment pipeline
+- pagedao-core will be published as a package and used by both API and dashboard
+- API will be deployed first, followed by dashboard
+- This approach simplifies build issues while maintaining the same functionality
+- Focus remains on providing accurate token metrics across the four chains
+- Dashboard will still prominently display TVL-weighted average price
+
+
+## NOTES
+- Each repository will have its own build process and deployment pipeline
+- pagedao-core will be published as a package and used by both API and dashboard
+- API will be deployed first, followed by dashboard
+- This approach simplifies build issues while maintaining the same functionality
+- Focus remains on providing accurate token metrics across the four chains
+- Dashboard will still prominently display TVL-weighted average price

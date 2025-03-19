@@ -1,34 +1,46 @@
-const axios = require('axios');
-const { ethers } = require('ethers');
-const { getProvider } = require('../blockchain/provider');
-const { 
+import axios from 'axios';
+import { ethers } from 'ethers';
+import { getProvider } from '../blockchain/provider';
+import {
   PAGE_TOKEN_CONFIG,
   COSMOS_PAGE_TOKEN,
-  OSMOSIS_LCD,
-  POOL_ID,
-  OSMO_USDC_POOL_ID,
-  OSMO_USDC_DENOM,
-  OSMOSIS_PAGE_DENOM,
-  TOKEN_DECIMALS,
+  OSMOSIS,
   ETH_USDC_PAIR,
-  CACHE_DURATION 
-} = require('../utils/config');
-const { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } = require('../utils/abis');
+  CACHE_DURATION,
+  TokenConfig
+} from '../utils/config';
+import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../utils/abis';
+
+// Types for price data
+export interface PriceData {
+  ethereum: number;
+  optimism: number;
+  base: number;
+  osmosis: number;
+  ethPrice: number;
+  timestamp: number;
+}
+
+export interface PoolData {
+  tokenAAmount: number; // PAGE amount
+  tokenBAmount: number; // ETH amount
+}
 
 // Cache for prices
-let priceCache = {
-  ethereum: null,
-  optimism: null,
-  base: null,
-  osmosis: null,
-  timestamp: 0,
-  ethPrice: null
+let priceCache: PriceData = {
+  ethereum: 0,
+  optimism: 0,
+  base: 0,
+  osmosis: 0,
+  ethPrice: 0,
+  timestamp: 0
 };
 
 /**
  * Fetches PAGE token prices from all supported chains
+ * @returns Promise with price data for all chains
  */
-async function fetchPagePrices() {
+export async function fetchPagePrices(): Promise<PriceData> {
   // Check if cache is still valid
   const now = Date.now();
   if (priceCache.timestamp > 0 && now - priceCache.timestamp < CACHE_DURATION) {
@@ -71,8 +83,9 @@ async function fetchPagePrices() {
 
 /**
  * Fetch ETH price in USD from Uniswap V3 pool
+ * @returns Promise with ETH price in USD
  */
-async function fetchEthPrice() {
+export async function fetchEthPrice(): Promise<number> {
   try {
     console.log('Fetching ETH price from Uniswap V3 pool...');
     
@@ -127,16 +140,23 @@ async function fetchEthPrice() {
 
 /**
  * Calculate PAGE price from pool data
+ * @param poolData Pool data with token amounts
+ * @param ethPrice ETH price in USD
+ * @returns PAGE price in USD
  */
-function calculatePagePrice(poolData, ethPrice) {
+function calculatePagePrice(poolData: PoolData, ethPrice: number): number {
   // PAGE price = ETH amount * ETH price / PAGE amount
   return (poolData.tokenBAmount * ethPrice) / poolData.tokenAAmount;
 }
 
 /**
  * Get pool reserves for a Uniswap pool (v2 or v3)
+ * @param lpAddress LP address
+ * @param tokenConfig Token configuration
+ * @param chain Chain name
+ * @returns Pool data with token amounts
  */
-async function getPoolReserves(lpAddress, tokenConfig, chain) {
+async function getPoolReserves(lpAddress: string, tokenConfig: TokenConfig, chain: string): Promise<PoolData> {
   try {
     // Make sure to await the provider
     const provider = await getProvider(chain);
@@ -157,8 +177,16 @@ async function getPoolReserves(lpAddress, tokenConfig, chain) {
 
 /**
  * Get pool reserves for a Uniswap V2 pair
+ * @param lpAddress LP address
+ * @param tokenConfig Token configuration
+ * @param provider Ethers provider
+ * @returns Pool data with token amounts
  */
-async function getV2PoolReserves(lpAddress, tokenConfig, provider) {
+async function getV2PoolReserves(
+  lpAddress: string, 
+  tokenConfig: TokenConfig, 
+  provider: ethers.providers.JsonRpcProvider
+): Promise<PoolData> {
   // Create contract with the provided provider
   const pairContract = new ethers.Contract(
     lpAddress, 
@@ -185,8 +213,16 @@ async function getV2PoolReserves(lpAddress, tokenConfig, provider) {
 
 /**
  * Get pool data from a Uniswap V3 pool with correct decimal handling
+ * @param lpAddress LP address
+ * @param tokenConfig Token configuration
+ * @param provider Ethers provider
+ * @returns Pool data with token amounts
  */
-async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
+async function getV3PoolReserves(
+  lpAddress: string, 
+  tokenConfig: TokenConfig, 
+  provider: ethers.providers.JsonRpcProvider
+): Promise<PoolData> {
   try {
     console.log(`Fetching V3 pool data for ${lpAddress}...`);
     
@@ -250,13 +286,14 @@ async function getV3PoolReserves(lpAddress, tokenConfig, provider) {
 
 /**
  * Fetch Osmosis PAGE price
+ * @returns Promise with PAGE price in USD
  */
-async function fetchOsmosisPrice() {
+export async function fetchOsmosisPrice(): Promise<number> {
   try {
     console.log('Fetching Osmosis price...');
     
     // Get PAGE/OSMO pool data
-    const poolResponse = await axios.get(`${OSMOSIS_LCD}/osmosis/gamm/v1beta1/pools/${POOL_ID}`);
+    const poolResponse = await axios.get(`${OSMOSIS.LCD}/osmosis/gamm/v1beta1/pools/${OSMOSIS.POOL_ID}`);
     
     if (!poolResponse.data || !poolResponse.data.pool || !poolResponse.data.pool.pool_assets) {
       throw new Error('Invalid pool data structure');
@@ -265,11 +302,11 @@ async function fetchOsmosisPrice() {
     const assets = poolResponse.data.pool.pool_assets;
     
     // Find PAGE and OSMO in pool assets
-    const pageAsset = assets.find(asset => 
-      asset.token.denom === OSMOSIS_PAGE_DENOM
+    const pageAsset = assets.find((asset: any) => 
+      asset.token.denom === OSMOSIS.PAGE_DENOM
     );
     
-    const osmoAsset = assets.find(asset => 
+    const osmoAsset = assets.find((asset: any) => 
       asset.token.denom === 'uosmo'
     );
     
@@ -278,11 +315,11 @@ async function fetchOsmosisPrice() {
     }
     
     // Calculate PAGE price in OSMO
-    const pageAmount = Number(pageAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.PAGE);
-    const osmoAmount = Number(osmoAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.OSMO);
+    const pageAmount = Number(pageAsset.token.amount) / Math.pow(10, OSMOSIS.TOKEN_DECIMALS.PAGE);
+    const osmoAmount = Number(osmoAsset.token.amount) / Math.pow(10, OSMOSIS.TOKEN_DECIMALS.OSMO);
     
     // Get OSMO/USDC price
-    const osmoUsdcResponse = await axios.get(`${OSMOSIS_LCD}/osmosis/gamm/v1beta1/pools/${OSMO_USDC_POOL_ID}`);
+    const osmoUsdcResponse = await axios.get(`${OSMOSIS.LCD}/osmosis/gamm/v1beta1/pools/${OSMOSIS.OSMO_USDC_POOL_ID}`);
     
     if (!osmoUsdcResponse.data || !osmoUsdcResponse.data.pool || !osmoUsdcResponse.data.pool.pool_assets) {
       throw new Error('Invalid OSMO/USDC pool data');
@@ -290,20 +327,20 @@ async function fetchOsmosisPrice() {
     
     const osmoUsdcAssets = osmoUsdcResponse.data.pool.pool_assets;
     
-    const osmoUsdcAsset = osmoUsdcAssets.find(asset => 
+    const osmoUsdcAsset = osmoUsdcAssets.find((asset: any) => 
       asset.token.denom === 'uosmo'
     );
     
-    const usdcAsset = osmoUsdcAssets.find(asset => 
-      asset.token.denom.includes(OSMO_USDC_DENOM)
+    const usdcAsset = osmoUsdcAssets.find((asset: any) => 
+      asset.token.denom.includes(OSMOSIS.USDC_DENOM)
     );
     
     if (!osmoUsdcAsset || !usdcAsset) {
       throw new Error('Could not identify tokens in OSMO/USDC pool');
     }
     
-    const osmoAmountUsdcPool = Number(osmoUsdcAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.OSMO);
-    const usdcAmount = Number(usdcAsset.token.amount) / Math.pow(10, TOKEN_DECIMALS.USDC);
+    const osmoAmountUsdcPool = Number(osmoUsdcAsset.token.amount) / Math.pow(10, OSMOSIS.TOKEN_DECIMALS.OSMO);
+    const usdcAmount = Number(usdcAsset.token.amount) / Math.pow(10, OSMOSIS.TOKEN_DECIMALS.USDC);
     
     const osmoUsdPrice = usdcAmount / osmoAmountUsdcPool;
     
@@ -320,8 +357,10 @@ async function fetchOsmosisPrice() {
 
 /**
  * Fetch Ethereum PAGE price using actual Uniswap pool data
+ * @param ethPrice ETH price in USD
+ * @returns Promise with PAGE price in USD
  */
-async function fetchEthereumPagePrice(ethPrice) {
+export async function fetchEthereumPagePrice(ethPrice: number): Promise<number> {
   try {
     console.log('Fetching Ethereum PAGE price...');
     const ethereumToken = PAGE_TOKEN_CONFIG.find(token => token.chainId === 1);
@@ -347,8 +386,10 @@ async function fetchEthereumPagePrice(ethPrice) {
 
 /**
  * Fetch Optimism PAGE price
+ * @param ethPrice ETH price in USD
+ * @returns Promise with PAGE price in USD
  */
-async function fetchOptimismPagePrice(ethPrice) {
+export async function fetchOptimismPagePrice(ethPrice: number): Promise<number> {
   try {
     console.log('Fetching Optimism PAGE price...');
     const optimismToken = PAGE_TOKEN_CONFIG.find(token => token.chainId === 10);
@@ -361,50 +402,42 @@ async function fetchOptimismPagePrice(ethPrice) {
     const poolData = await getPoolReserves(optimismToken.lpAddress, optimismToken, 'optimism');
     console.log('Optimism pool data:', poolData);
     
- // Calculate PAGE price using the reserves and ETH price
- const pagePrice = calculatePagePrice(poolData, ethPrice);
- console.log('Calculated PAGE price on Optimism:', pagePrice);
- 
- return pagePrice;
-} catch (error) {
- console.error('Error fetching Optimism PAGE price:', error);
- throw error;
-}
+    // Calculate PAGE price using the reserves and ETH price
+    const pagePrice = calculatePagePrice(poolData, ethPrice);
+    console.log('Calculated PAGE price on Optimism:', pagePrice);
+    
+    return pagePrice;
+  } catch (error) {
+    console.error('Error fetching Optimism PAGE price:', error);
+    throw error;
+  }
 }
 
 /**
-* Fetch Base PAGE price
-*/
-async function fetchBasePagePrice(ethPrice) {
-try {
- console.log('Fetching Base PAGE price...');
- const baseToken = PAGE_TOKEN_CONFIG.find(token => token.chainId === 8453);
- 
- if (!baseToken || !baseToken.lpAddress) {
-   throw new Error('Base token config not found');
- }
- 
- // Get actual pool reserves from Uniswap on Base - make sure to await the result
- const poolData = await getPoolReserves(baseToken.lpAddress, baseToken, 'base');
- console.log('Base pool data:', poolData);
- 
- // Calculate PAGE price using the reserves and ETH price
- const pagePrice = calculatePagePrice(poolData, ethPrice);
- console.log('Calculated PAGE price on Base:', pagePrice);
- 
- return pagePrice;
-} catch (error) {
- console.error('Error fetching Base PAGE price:', error);
- throw error;
+ * Fetch Base PAGE price
+ * @param ethPrice ETH price in USD
+ * @returns Promise with PAGE price in USD
+ */
+export async function fetchBasePagePrice(ethPrice: number): Promise<number> {
+  try {
+    console.log('Fetching Base PAGE price...');
+    const baseToken = PAGE_TOKEN_CONFIG.find(token => token.chainId === 8453);
+    
+    if (!baseToken || !baseToken.lpAddress) {
+      throw new Error('Base token config not found');
+    }
+    
+    // Get actual pool reserves from Uniswap on Base - make sure to await the result
+    const poolData = await getPoolReserves(baseToken.lpAddress, baseToken, 'base');
+    console.log('Base pool data:', poolData);
+    
+    // Calculate PAGE price using the reserves and ETH price
+    const pagePrice = calculatePagePrice(poolData, ethPrice);
+    console.log('Calculated PAGE price on Base:', pagePrice);
+    
+    return pagePrice;
+  } catch (error) {
+    console.error('Error fetching Base PAGE price:', error);
+    throw error;
+  }
 }
-}
-
-module.exports = {
-fetchPagePrices,
-fetchEthPrice,
-fetchOsmosisPrice,
-fetchEthereumPagePrice,
-fetchOptimismPagePrice,
-fetchBasePagePrice,
-getPoolReserves
-};
