@@ -1,68 +1,28 @@
-# Consolidated netlify.toml for PageDAO Hub
+[build]
+  command = "yarn build"
+  publish = "packages/dashboard/build"
+  functions = "api"
 
-
-# Environment variable injection
+# Environment variables available to all functions
 [build.environment]
   NODE_VERSION = "18"
-  NPM_FLAGS = "--version" # This prevents npm from running extra commands
+  REACT_APP_DEFAULT_THEME = "dark"
+  REACT_APP_DEFAULT_TIMEFRAME = "24h"
+  REACT_APP_REFRESH_INTERVAL = "60000"
 
-[build]
-  command = "npx pnpm install && bash netlify-build.sh"
-  functions = "packages/api/dist"
-  publish = "packages/dashboard/dist"
-
-# Redirect API endpoints to Netlify Functions
+# API paths
 [[redirects]]
-  from = "/api/v1/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# Original Frame endpoints
-[[redirects]]
-  from = "/frame"
-  to = "/.netlify/functions/frame"
+  from = "/api/token-prices"
+  to = "/.netlify/functions/token-prices"
   status = 200
 
 [[redirects]]
-  from = "/image"
-  to = "/.netlify/functions/image"
+  from = "/api/historical-data"
+  to = "/.netlify/functions/historical-data"
   status = 200
 
-[[redirects]]
-  from = "/trade"
-  to = "/.netlify/functions/trade"
-  status = 200
-
-# Token API endpoints
-[[redirects]]
-  from = "/api/v1/token/price"
-  to = "/.netlify/functions/token-price"
-  status = 200
-
-[[redirects]]
-  from = "/api/v1/token/price/*"
-  to = "/.netlify/functions/token-price/:splat"
-  status = 200
-
-# Liquidity API endpoints
-[[redirects]]
-  from = "/api/v1/liquidity/tvl"
-  to = "/.netlify/functions/liquidity-tvl"
-  status = 200
-
-[[redirects]]
-  from = "/api/v1/liquidity/tvl/*"
-  to = "/.netlify/functions/liquidity-tvl/:splat"
-  status = 200
-
-# Redirect all other routes to index.html for SPA routing
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Function bundle settings
-[functions]
-  node_bundler = "esbuild"
-  external_node_modules = ["ethers", "canvas", "zod", "axios"]
-  included_files = ["packages/core/dist/**", "packages/core/package.json"]
