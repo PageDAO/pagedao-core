@@ -31,13 +31,18 @@ const getApiBaseUrl = () => {
   const envApiUrl = process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_BASE_URL;
   if (!envApiUrl) {
     logger.warn('API base URL not found in environment, using default');
+    
+    // Use window.location.origin to create a complete URL
+    const baseOrigin = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : 'http://localhost:3000';
+      
     return environment === 'production' 
-      ? '/api/v1' 
+      ? `${baseOrigin}/api/v1` 
       : 'http://localhost:8888/api/v1';
   }
   return envApiUrl;
 };
-
 // Export configuration
 export const API_CONFIG = ApiConfigSchema.parse({
   baseUrl: getApiBaseUrl(),
