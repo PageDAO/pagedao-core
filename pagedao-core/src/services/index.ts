@@ -1,21 +1,18 @@
 // src/services/content/index.ts
 
 // Export all content-related interfaces
-export * from '../../interfaces/content';
+export * from '../interfaces/content';
 
 // Export base tracker
-export * from '../baseContentTracker';
+export * from './baseContentTracker';
 
 // Export factory
 export * from '../factory/contentTrackerFactory';
 
 // Export adapters
-export * from '../alexandriaLabs/alexandriaBookAdapter';
-export * from '../mirror/mirrorPublicationAdapter';
-export * from '../zora/zoraNftAdapter';
-
-// Export utilities
-export * from './examples/contentMetadataExample';
+export * from './alexandriaLabs/AlexandriaBookAdapter';
+export * from './mirror/mirrorPublicationAdapter';
+export * from './zora/zoraNftAdapter';
 
 /**
  * Initialize all content adapters

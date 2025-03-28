@@ -8,7 +8,7 @@ import {
   CollectionInfo
 } from '../../interfaces/content';
 import { AlexandriaBookTracker, BookCopy, BookCollection } from '../../services/alexandriaLabs/AlexandriaBookTracker';
-import { ContentTrackerFactory } from '../factory/contentTrackerFactory';
+import { ContentTrackerFactory } from '../../factory/contentTrackerFactory';
 
 /**
  * Adapter for Alexandria Books to standardized content interface

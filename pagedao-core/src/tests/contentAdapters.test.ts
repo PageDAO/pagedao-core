@@ -1,6 +1,6 @@
-// src/tests/contentAdapters.test.ts
+// Fix for the file src/tests/contentAdapters.test.ts
 
-import { ContentTrackerFactory } from '../services/content/factory';
+import { ContentTrackerFactory } from '../factory/contentTrackerFactory';
 import { 
   ContentMetadata, 
   Ownership, 
@@ -9,7 +9,8 @@ import {
 } from '../interfaces/content';
 
 // Initialize content adapters
-import '../services/content';
+// Initialize content adapters
+import '../services/index';
 
 // Test constants
 const TEST_ADDRESSES = {
@@ -51,7 +52,9 @@ async function testAdapter(
       // Verify metadata structure
       verifyMetadataStructure(metadata);
     } catch (error) {
-      console.error(`Error fetching metadata: ${error.message}`);
+      // Fix: Add type assertion for error
+      const err = error as Error;
+      console.error(`Error fetching metadata: ${err.message}`);
     }
     
     // Test ownership fetching
@@ -63,7 +66,9 @@ async function testAdapter(
       // Verify ownership structure
       verifyOwnershipStructure(ownership);
     } catch (error) {
-      console.error(`Error fetching ownership: ${error.message}`);
+      // Fix: Add type assertion
+      const err = error as Error;
+      console.error(`Error fetching ownership: ${err.message}`);
     }
     
     // Test rights fetching
@@ -75,7 +80,9 @@ async function testAdapter(
       // Verify rights structure
       verifyRightsStructure(rights);
     } catch (error) {
-      console.error(`Error fetching rights: ${error.message}`);
+      // Fix: Add type assertion
+      const err = error as Error;
+      console.error(`Error fetching rights: ${err.message}`);
     }
     
     // Test collection info fetching
@@ -87,7 +94,9 @@ async function testAdapter(
       // Verify collection info structure
       verifyCollectionInfoStructure(collectionInfo);
     } catch (error) {
-      console.error(`Error fetching collection info: ${error.message}`);
+      // Fix: Add type assertion
+      const err = error as Error;
+      console.error(`Error fetching collection info: ${err.message}`);
     }
     
     // Test ownership check
@@ -96,7 +105,9 @@ async function testAdapter(
       const isOwned = await tracker.isOwnedBy(TEST_TOKEN_ID, TEST_WALLET);
       console.log(`Owned by test wallet: ${isOwned}`);
     } catch (error) {
-      console.error(`Error checking ownership: ${error.message}`);
+      // Fix: Add type assertion
+      const err = error as Error;
+      console.error(`Error checking ownership: ${err.message}`);
     }
     
     console.log(`\n✅ ${name} Adapter tests completed!`);
@@ -105,12 +116,13 @@ async function testAdapter(
   }
 }
 
-// Verification helpers
+// Verification helpers - fix dynamic property access
 function verifyMetadataStructure(metadata: ContentMetadata): void {
   // Ensure required fields are present
   const requiredFields = ['id', 'chain', 'contractAddress'];
   for (const field of requiredFields) {
-    if (!metadata[field]) {
+    // Fix: Type-safe property access
+    if (!hasProperty(metadata, field)) {
       throw new Error(`Missing required field in metadata: ${field}`);
     }
   }
@@ -121,7 +133,8 @@ function verifyOwnershipStructure(ownership: Ownership): void {
   // Ensure required fields are present
   const requiredFields = ['owner', 'tokenId'];
   for (const field of requiredFields) {
-    if (!ownership[field]) {
+    // Fix: Type-safe property access
+    if (!hasProperty(ownership, field)) {
       throw new Error(`Missing required field in ownership: ${field}`);
     }
   }
@@ -132,7 +145,8 @@ function verifyRightsStructure(rights: ContentRights): void {
   // Ensure required fields are present
   const requiredFields = ['transferable', 'commercial'];
   for (const field of requiredFields) {
-    if (rights[field] === undefined) {
+    // Fix: Type-safe property access
+    if (!hasDefinedProperty(rights, field)) {
       throw new Error(`Missing required field in rights: ${field}`);
     }
   }
@@ -143,11 +157,21 @@ function verifyCollectionInfoStructure(info: CollectionInfo): void {
   // Ensure required fields are present
   const requiredFields = ['name', 'contractAddress', 'chain'];
   for (const field of requiredFields) {
-    if (!info[field]) {
+    // Fix: Type-safe property access
+    if (!hasProperty(info, field)) {
       throw new Error(`Missing required field in collection info: ${field}`);
     }
   }
   console.log('✅ Collection info structure verified');
+}
+
+// Helper functions for type-safe property access
+function hasProperty<T extends object>(obj: T, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key) && (obj as any)[key] !== null && (obj as any)[key] !== undefined;
+}
+
+function hasDefinedProperty<T extends object>(obj: T, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key) && (obj as any)[key] !== undefined;
 }
 
 /**

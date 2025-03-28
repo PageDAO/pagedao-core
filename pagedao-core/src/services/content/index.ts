@@ -8,9 +8,9 @@ export * from './baseContentTracker';
 export * from './factory';
 
 // Export adapters
-export * from '../alexandriaLabs/alexandriaAdapter';
-export * from '../mirror/mirrorAdapter';
-export * from '../zora/zoraAdapter';
+export * from '../alexandriaLabs/AlexandriaBookAdapter';
+export * from '../mirror/mirrorPublicationAdapter';
+export * from '../zora/zoraNftAdapter';
 
 /**
  * Initialize all content adapters

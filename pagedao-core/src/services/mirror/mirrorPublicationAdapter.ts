@@ -8,7 +8,7 @@ import {
   CollectionInfo
 } from '../../interfaces/content';
 import { MirrorPublicationTracker, MirrorPublication } from '../../services/mirror/mirrorPublicationTracker';
-import { ContentTrackerFactory } from '../factory/contentTrackerFactory';
+import { ContentTrackerFactory } from '../../factory/contentTrackerFactory';
 
 /**
  * Adapter for Mirror Publications to standardized content interface
