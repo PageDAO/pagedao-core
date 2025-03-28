@@ -90,18 +90,24 @@ export interface TokenConfig {
   };
   
   // RPC URLs
-  export const RPC_URLS: { [key: string]: string } = {
-    ethereum: process.env.ETH_RPC_URL || 'https://eth.drpc.org',
-    optimism: process.env.OPTIMISM_RPC_URL || 'https://mainnet.optimism.io', 
-    base: process.env.BASE_RPC_URL || 'https://mainnet.base.org'
-  };
-  
+export const RPC_URLS: { [key: string]: string } = {
+  ethereum: process.env.ETH_RPC_URL || 'https://eth.drpc.org',
+  optimism: process.env.OPTIMISM_RPC_URL || 'https://mainnet.optimism.io',
+  base: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
+  zora: process.env.ZORA_RPC_URL || 'https://rpc.zora.energy',
+  polygon: process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com',
+  osmosis: process.env.OSMOSIS_PRIMARY_RPC || 'https://api.kyve.network/osmosis'
+};
+
   // Backup RPC URLs
-  export const BACKUP_RPC_URLS: { [key: string]: string } = {
-    ethereum: process.env.ETH_BACKUP_RPC_URL || 'https://eth.llamarpc.com',
-    optimism: process.env.OPTIMISM_BACKUP_RPC_URL || 'https://optimism.llamarpc.com',
-    base: process.env.BASE_BACKUP_RPC_URL || 'https://base.publicnode.com'
-  };
+export const BACKUP_RPC_URLS: { [key: string]: string } = {
+  ethereum: process.env.ETH_BACKUP_RPC_URL || 'https://eth.llamarpc.com',
+  optimism: process.env.OPTIMISM_BACKUP_RPC_URL || 'https://optimism.llamarpc.com',
+  base: process.env.BASE_BACKUP_RPC_URL || 'https://base.publicnode.com',
+  zora: process.env.ZORA_BACKUP_RPC_URL || 'https://rpc.ankr.com/zora',
+  polygon: process.env.POLYGON_BACKUP_RPC_URL || 'https://polygon.llamarpc.com',
+  osmosis: process.env.OSMOSIS_BACKUP_RPC || 'https://lcd.osmosis.zone'
+};
   
   // Osmosis constants
   export const OSMOSIS = {
