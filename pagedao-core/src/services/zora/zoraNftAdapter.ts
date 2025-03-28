@@ -8,7 +8,7 @@ import {
   CollectionInfo
 } from '../../interfaces/content';
 import { ZoraNftTracker, ZoraNft } from '../../services/zora/zoraNftTracker';
-import { ContentTrackerFactory } from '../factory/contentTrackerFactory';
+import { ContentTrackerFactory } from '../../factory/contentTrackerFactory';
 
 /**
  * Options for Zora NFT adapter
@@ -69,8 +69,11 @@ export class ZoraNftAdapter extends BaseContentTracker {
       
       return this.withCache(cacheKey, async () => {
         // For ERC721, we can get the owner directly
-        if (this.standard === 'ERC721' && typeof this.tracker.owner === 'function') {
-          const owner = await this.getOwnerERC721(tokenId);
+        if (this.standard === 'ERC721') {
+          // Get owners through the tracker's appropriate method
+          const tokenHolders = await this.tracker.getTokenHolders(tokenId);
+          // Use the first owner from the list if available
+          const owner = tokenHolders.length > 0 ? tokenHolders[0].address : 'Unknown';
           
           return {
             owner,
@@ -92,18 +95,6 @@ export class ZoraNftAdapter extends BaseContentTracker {
     } catch (error) {
       throw this.handleError('fetchOwnership', error);
     }
-  }
-  
-  /**
-   * Helper method to get the owner of an ERC721 token
-   */
-  private async getOwnerERC721(tokenId: string): Promise<string> {
-    const provider = await this.getProvider();
-    const contract = new ethers.Contract(this.contractAddress, [
-      "function ownerOf(uint256 tokenId) view returns (address)"
-    ], provider);
-    
-    return await contract.ownerOf(tokenId);
   }
   
   async fetchRights(tokenId: string): Promise<ContentRights> {

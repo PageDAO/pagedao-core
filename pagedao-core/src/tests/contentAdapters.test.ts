@@ -1,5 +1,6 @@
 // Fix for the file src/tests/contentAdapters.test.ts
 
+import { ethers } from 'ethers';
 import { ContentTrackerFactory } from '../factory/contentTrackerFactory';
 import { 
   ContentMetadata, 
@@ -9,19 +10,21 @@ import {
 } from '../interfaces/content';
 
 // Initialize content adapters
-// Initialize content adapters
 import '../services/index';
 
 // Test constants
-const TEST_ADDRESSES = {
-  // These should be replaced with actual contract addresses for testing
-  ALEXANDRIA_BOOK: '0x3d7e7b0bD812C9BD119830F91d1fc6E1943A3fF2',
-  MIRROR_PUBLICATION: '0x4b5922ABf25858d012d12bb1184e5d3d0B6D6BE4',
-  ZORA_NFT: '0x7d256d82b32D8003d1ca6dA3Bf67B65A8004E896',
+// First, let's use only the lowercase versions of the addresses to avoid checksum issues
+const TEST_ADDRESSES_RAW = {
+  ALEXANDRIA_BOOK: '0x64E2C384738b9Ca2C1820a00B3C2067B8213640e',
+  MIRROR_PUBLICATION: '0x4b5922abf25858d012d12bb1184e5d3d0b6d6be4',
+  ZORA_NFT: '0xf4de077cfbdfea88ea04f4b0c1b52924aa507f73'
 };
 
+// For comparison, let's also try one known good address
+const SAMPLE_GOOD_ADDRESS = '0xC6cD1A73fe649fEbBD2b400717c8CF5C5b5BFD8f';
+
 const TEST_TOKEN_ID = '1'; // Use a token ID that exists on all test contracts
-const TEST_WALLET = '0x1234567890123456789012345678901234567890'; // Replace with a test wallet
+const TEST_WALLET = '0x1234567890123456789012345678901234567890'; // Use a test wallet
 
 /**
  * Test a specific adapter by content type
@@ -36,7 +39,11 @@ async function testAdapter(
   
   try {
     // Create tracker via factory
-    const tracker = ContentTrackerFactory.getTracker(address, contentType, chain);
+    // Always use lowercase for consistency
+    const lowercaseAddress = address.toLowerCase();
+    console.log(`Using address: ${lowercaseAddress}`);
+    
+    const tracker = ContentTrackerFactory.getTracker(lowercaseAddress, contentType, chain);
     
     // Test getters
     console.log(`Contract Address: ${tracker.getContractAddress()}`);
@@ -102,7 +109,8 @@ async function testAdapter(
     // Test ownership check
     try {
       console.log(`\nChecking if token ${TEST_TOKEN_ID} is owned by ${TEST_WALLET}...`);
-      const isOwned = await tracker.isOwnedBy(TEST_TOKEN_ID, TEST_WALLET);
+      // Make sure to use lowercase for wallet address too
+      const isOwned = await tracker.isOwnedBy(TEST_TOKEN_ID, TEST_WALLET.toLowerCase());
       console.log(`Owned by test wallet: ${isOwned}`);
     } catch (error) {
       // Fix: Add type assertion
@@ -116,12 +124,12 @@ async function testAdapter(
   }
 }
 
-// Verification helpers - fix dynamic property access
+// Verification helpers
 function verifyMetadataStructure(metadata: ContentMetadata): void {
   // Ensure required fields are present
   const requiredFields = ['id', 'chain', 'contractAddress'];
   for (const field of requiredFields) {
-    // Fix: Type-safe property access
+    // Type-safe property access
     if (!hasProperty(metadata, field)) {
       throw new Error(`Missing required field in metadata: ${field}`);
     }
@@ -133,7 +141,7 @@ function verifyOwnershipStructure(ownership: Ownership): void {
   // Ensure required fields are present
   const requiredFields = ['owner', 'tokenId'];
   for (const field of requiredFields) {
-    // Fix: Type-safe property access
+    // Type-safe property access
     if (!hasProperty(ownership, field)) {
       throw new Error(`Missing required field in ownership: ${field}`);
     }
@@ -145,7 +153,7 @@ function verifyRightsStructure(rights: ContentRights): void {
   // Ensure required fields are present
   const requiredFields = ['transferable', 'commercial'];
   for (const field of requiredFields) {
-    // Fix: Type-safe property access
+    // Type-safe property access
     if (!hasDefinedProperty(rights, field)) {
       throw new Error(`Missing required field in rights: ${field}`);
     }
@@ -157,7 +165,7 @@ function verifyCollectionInfoStructure(info: CollectionInfo): void {
   // Ensure required fields are present
   const requiredFields = ['name', 'contractAddress', 'chain'];
   for (const field of requiredFields) {
-    // Fix: Type-safe property access
+    // Type-safe property access
     if (!hasProperty(info, field)) {
       throw new Error(`Missing required field in collection info: ${field}`);
     }
@@ -184,7 +192,7 @@ async function runAllTests(): Promise<void> {
     // Test Alexandria Book adapter
     await testAdapter(
       'Alexandria Book',
-      TEST_ADDRESSES.ALEXANDRIA_BOOK,
+      TEST_ADDRESSES_RAW.ALEXANDRIA_BOOK,
       'book',
       'base'
     );
@@ -192,7 +200,7 @@ async function runAllTests(): Promise<void> {
     // Test Mirror Publication adapter
     await testAdapter(
       'Mirror Publication',
-      TEST_ADDRESSES.MIRROR_PUBLICATION,
+      TEST_ADDRESSES_RAW.MIRROR_PUBLICATION,
       'publication',
       'ethereum'
     );
@@ -200,7 +208,7 @@ async function runAllTests(): Promise<void> {
     // Test Zora NFT adapter
     await testAdapter(
       'Zora NFT',
-      TEST_ADDRESSES.ZORA_NFT,
+      TEST_ADDRESSES_RAW.ZORA_NFT,
       'nft',
       'zora'
     );

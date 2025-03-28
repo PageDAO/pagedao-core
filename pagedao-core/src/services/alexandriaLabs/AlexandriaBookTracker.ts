@@ -1,4 +1,4 @@
-// src/services/alexandriaBookTracker.ts
+// src/services/alexandriaLabs/AlexandriaBookTracker.ts
 
 import { ethers } from 'ethers';
 import { getProvider } from '../../blockchain/provider';
@@ -9,6 +9,19 @@ export interface BookCopy {
   owner: string;               // Current owner address
   metadataUri?: string;        // URI for token metadata
   lastTransferTimestamp?: number; // When it was last transferred
+}
+
+// Book metadata structure
+export interface BookMetadata {
+  name?: string;
+  description?: string;
+  author?: string;
+  image?: string;
+  contentUri?: string;
+  content_uri?: string;
+  format?: string;
+  title?: string;
+  coverImageUrl?: string;
 }
 
 // Book collection data structure
@@ -27,14 +40,7 @@ export interface BookCollection {
   baseTokenUri: string;        // Base URI for token metadata
   
   // Metadata about the book itself
-  bookMetadata?: {
-    title?: string;            // Book title
-    description?: string;      // Book description
-    author?: string;           // Book author
-    coverImageUrl?: string;    // Cover image URL
-    contentUri?: string;       // Where the book content is stored
-    format?: string;           // ebook, audiobook, etc.
-  };
+  bookMetadata?: BookMetadata;
   
   // Optional list of token owners (only populated if fetchOwners is true)
   copies?: BookCopy[];
@@ -113,7 +119,7 @@ export class AlexandriaBookTracker {
     ]);
     
     // Get book metadata from the first token or contract URI
-    let bookMetadata = {};
+    let bookMetadata: BookMetadata = {};
     try {
       if (totalSupply.gt(0)) {
         // Try to get metadata from the first token
@@ -146,12 +152,12 @@ export class AlexandriaBookTracker {
       metadataFrozen,
       baseTokenUri,
       bookMetadata: {
-        title: bookMetadata?.name,
-        description: bookMetadata?.description,
-        author: bookMetadata?.author,
-        coverImageUrl: bookMetadata?.image,
-        contentUri: bookMetadata?.contentUri || bookMetadata?.content_uri,
-        format: bookMetadata?.format
+        title: bookMetadata.name,
+        description: bookMetadata.description,
+        author: bookMetadata.author,
+        coverImageUrl: bookMetadata.image,
+        contentUri: bookMetadata.contentUri || bookMetadata.content_uri,
+        format: bookMetadata.format
       }
     };
     
@@ -344,21 +350,37 @@ export class AlexandriaBookTracker {
    * @returns A function to unsubscribe from the events
    */
   subscribeToMints(callback: (tokenId: string, to: string) => void): () => void {
-    const provider = getProvider(this.chain);
-    const contract = new ethers.Contract(this.contractAddress, this.abi, provider);
+    // Make sure to properly handle the async provider
+    const providerPromise = getProvider(this.chain);
     
-    // Listen for Transfer events from the zero address (mints)
-    const filter = contract.filters.Transfer(ethers.constants.AddressZero);
+    let contract: ethers.Contract;
+    let filter: ethers.EventFilter;
+    let listener: (from: string, to: string, tokenId: ethers.BigNumber) => void;
     
-    const listener = (from: string, to: string, tokenId: ethers.BigNumber) => {
-      callback(tokenId.toString(), to);
+    const setup = async () => {
+      const provider = await providerPromise;
+      contract = new ethers.Contract(this.contractAddress, this.abi, provider);
+      
+      // Listen for Transfer events from the zero address (mints)
+      filter = contract.filters.Transfer(ethers.constants.AddressZero);
+      
+      listener = (from: string, to: string, tokenId: ethers.BigNumber) => {
+        callback(tokenId.toString(), to);
+      };
+      
+      contract.on(filter, listener);
     };
     
-    contract.on(filter, listener);
+    // Set up the subscription
+    setup().catch(error => {
+      console.error("Error setting up mint subscription:", error);
+    });
     
     // Return a function to unsubscribe
     return () => {
-      contract.off(filter, listener);
+      if (contract && filter && listener) {
+        contract.off(filter, listener);
+      }
     };
   }
 }

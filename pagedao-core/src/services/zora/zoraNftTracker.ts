@@ -309,33 +309,51 @@ export class ZoraNftTracker {
    * @returns A function to unsubscribe from the events
    */
   subscribeToTransfers(callback: (from: string, to: string, tokenId: string, amount: number) => void): () => void {
-    const provider = getProvider(this.chain);
-    const contract = new ethers.Contract(this.contractAddress, this.zoraNft1155Abi, provider);
+    // Set up variables for contract and listeners
+    let contract: ethers.Contract;
+    let singleFilter: ethers.EventFilter;
+    let batchFilter: ethers.EventFilter;
+    let singleListener: (operator: string, from: string, to: string, id: ethers.BigNumber, value: ethers.BigNumber) => void;
+    let batchListener: (operator: string, from: string, to: string, ids: ethers.BigNumber[], values: ethers.BigNumber[]) => void;
     
-    // Listen to TransferSingle events
-    const singleFilter = contract.filters.TransferSingle();
-    
-    const singleListener = (operator: string, from: string, to: string, id: ethers.BigNumber, value: ethers.BigNumber) => {
-      callback(from, to, id.toString(), value.toNumber());
+    // Async setup for provider and contract
+    const setup = async () => {
+      // Properly await the provider
+      const provider = await getProvider(this.chain);
+      contract = new ethers.Contract(this.contractAddress, this.zoraNft1155Abi, provider);
+      
+      // Listen to TransferSingle events
+      singleFilter = contract.filters.TransferSingle();
+      singleListener = (operator: string, from: string, to: string, id: ethers.BigNumber, value: ethers.BigNumber) => {
+        callback(from, to, id.toString(), value.toNumber());
+      };
+      contract.on(singleFilter, singleListener);
+      
+      // Listen to TransferBatch events
+      batchFilter = contract.filters.TransferBatch();
+      batchListener = (operator: string, from: string, to: string, ids: ethers.BigNumber[], values: ethers.BigNumber[]) => {
+        for (let i = 0; i < ids.length; i++) {
+          callback(from, to, ids[i].toString(), values[i].toNumber());
+        }
+      };
+      contract.on(batchFilter, batchListener);
     };
     
-    // Listen to TransferBatch events
-    const batchFilter = contract.filters.TransferBatch();
-    
-    const batchListener = (operator: string, from: string, to: string, ids: ethers.BigNumber[], values: ethers.BigNumber[]) => {
-      for (let i = 0; i < ids.length; i++) {
-        callback(from, to, ids[i].toString(), values[i].toNumber());
-      }
-    };
-    
-    // Subscribe to both events
-    contract.on(singleFilter, singleListener);
-    contract.on(batchFilter, batchListener);
+    // Initialize the subscription
+    setup().catch(error => {
+      console.error("Error setting up transfer subscription:", error);
+    });
     
     // Return a function to unsubscribe
     return () => {
-      contract.off(singleFilter, singleListener);
-      contract.off(batchFilter, batchListener);
+      if (contract) {
+        if (singleFilter && singleListener) {
+          contract.off(singleFilter, singleListener);
+        }
+        if (batchFilter && batchListener) {
+          contract.off(batchFilter, batchListener);
+        }
+      }
     };
   }
   
@@ -345,21 +363,35 @@ export class ZoraNftTracker {
    * @returns A function to unsubscribe from the events
    */
   subscribeToNewTokens(callback: (tokenId: string, creator: string, uri: string, maxSupply: number) => void): () => void {
-    const provider = getProvider(this.chain);
-    const contract = new ethers.Contract(this.contractAddress, this.zoraNft1155Abi, provider);
+    // Set up variables for contract and listener
+    let contract: ethers.Contract;
+    let filter: ethers.EventFilter;
+    let listener: (tokenId: ethers.BigNumber, sender: string, newURI: string, maxSupply: ethers.BigNumber) => void;
     
-    // Listen to SetupNewToken events
-    const filter = contract.filters.SetupNewToken();
-    
-    const listener = (tokenId: ethers.BigNumber, sender: string, newURI: string, maxSupply: ethers.BigNumber) => {
-      callback(tokenId.toString(), sender, newURI, maxSupply.toNumber());
+    // Async setup for provider and contract
+    const setup = async () => {
+      // Properly await the provider
+      const provider = await getProvider(this.chain);
+      contract = new ethers.Contract(this.contractAddress, this.zoraNft1155Abi, provider);
+      
+      // Listen to SetupNewToken events
+      filter = contract.filters.SetupNewToken();
+      listener = (tokenId: ethers.BigNumber, sender: string, newURI: string, maxSupply: ethers.BigNumber) => {
+        callback(tokenId.toString(), sender, newURI, maxSupply.toNumber());
+      };
+      contract.on(filter, listener);
     };
     
-    contract.on(filter, listener);
+    // Initialize the subscription
+    setup().catch(error => {
+      console.error("Error setting up new token subscription:", error);
+    });
     
     // Return a function to unsubscribe
     return () => {
-      contract.off(filter, listener);
+      if (contract && filter && listener) {
+        contract.off(filter, listener);
+      }
     };
   }
 }

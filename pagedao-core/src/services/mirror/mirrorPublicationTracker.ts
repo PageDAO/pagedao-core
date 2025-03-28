@@ -238,30 +238,45 @@ export class MirrorPublicationTracker {
    * @returns A function to unsubscribe from the events
    */
   subscribeToNewPurchases(callback: (tokenId: string, recipient: string, price: string) => void): () => void {
-    const provider = getProvider(this.chain);
-    const contract = new ethers.Contract(this.contractAddress, this.abi, provider);
+    // Setup async provider and contract
+    let contract: ethers.Contract;
+    let filter: ethers.EventFilter;
+    let listener: (clone: string, tokenId: ethers.BigNumber, recipient: string, price: ethers.BigNumber, message: string) => void;
     
-    const filter = contract.filters.WritingEditionPurchased();
-    
-    const listener = (
-      clone: string, 
-      tokenId: ethers.BigNumber, 
-      recipient: string, 
-      price: ethers.BigNumber, 
-      message: string
-    ) => {
-      callback(
-        tokenId.toString(), 
-        recipient, 
-        ethers.utils.formatEther(price)
-      );
+    const setup = async () => {
+      // Properly await the provider
+      const provider = await getProvider(this.chain);
+      contract = new ethers.Contract(this.contractAddress, this.abi, provider);
+      
+      filter = contract.filters.WritingEditionPurchased();
+      
+      listener = (
+        clone: string, 
+        tokenId: ethers.BigNumber, 
+        recipient: string, 
+        price: ethers.BigNumber, 
+        message: string
+      ) => {
+        callback(
+          tokenId.toString(), 
+          recipient, 
+          ethers.utils.formatEther(price)
+        );
+      };
+      
+      contract.on(filter, listener);
     };
     
-    contract.on(filter, listener);
+    // Initialize the subscription
+    setup().catch(error => {
+      console.error("Error setting up purchase subscription:", error);
+    });
     
     // Return a function to unsubscribe
     return () => {
-      contract.off(filter, listener);
+      if (contract && filter && listener) {
+        contract.off(filter, listener);
+      }
     };
   }
 }
