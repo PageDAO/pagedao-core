@@ -5,8 +5,8 @@ import {
   PAGE_TOKEN_CONFIG,
   OSMOSIS,
   CACHE_DURATION
-} from '../utils/config';
-import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../utils/abis';
+} from '../../utils/config';
+import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../../utils/abis';
 
 // Types for TVL data
 export interface TvlData {

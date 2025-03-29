@@ -8,8 +8,8 @@ import {
   ETH_USDC_PAIR,
   CACHE_DURATION,
   TokenConfig
-} from '../utils/config';
-import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../utils/abis';
+} from '../../utils/config';
+import { UNISWAP_V2_PAIR_ABI, UNISWAP_V3_POOL_ABI } from '../../utils/abis';
 
 // Types for price data
 export interface PriceData {

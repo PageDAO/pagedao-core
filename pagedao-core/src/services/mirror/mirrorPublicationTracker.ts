@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { getProvider } from '../../blockchain/provider';
+import { getProvider } from '../../services/blockchain/provider';
 
 // Publication data structure
 export interface MirrorPublication {

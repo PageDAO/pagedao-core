@@ -16,7 +16,7 @@ import '../services/index';
 // First, let's use only the lowercase versions of the addresses to avoid checksum issues
 const TEST_ADDRESSES_RAW = {
   ALEXANDRIA_BOOK: '0x64E2C384738b9Ca2C1820a00B3C2067B8213640e',
-  MIRROR_PUBLICATION: '0x4b5922abf25858d012d12bb1184e5d3d0b6d6be4',
+  MIRROR_PUBLICATION: '0x8338c8e0e3e713ee2502c526f4840657be9fb350',
   ZORA_NFT: '0xf4de077cfbdfea88ea04f4b0c1b52924aa507f73'
 };
 

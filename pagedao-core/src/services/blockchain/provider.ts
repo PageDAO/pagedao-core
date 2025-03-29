@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { RPC_URLS, BACKUP_RPC_URLS } from '../utils/config';
+import { RPC_URLS, BACKUP_RPC_URLS } from '../../utils/config';
 
 // Type for RPC URLs
 export interface RpcUrls {

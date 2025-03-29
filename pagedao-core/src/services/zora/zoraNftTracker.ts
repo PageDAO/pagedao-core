@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { getProvider } from '../../blockchain/provider';
+import { getProvider } from '../../services/blockchain/provider';
 
 // NFT token data structure
 export interface ZoraNft {

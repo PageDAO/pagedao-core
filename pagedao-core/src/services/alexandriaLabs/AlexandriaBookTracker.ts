@@ -1,7 +1,7 @@
 // src/services/alexandriaLabs/AlexandriaBookTracker.ts
 
 import { ethers } from 'ethers';
-import { getProvider } from '../../blockchain/provider';
+import { getProvider } from '../../services/blockchain/provider';
 
 // Book copy data structure
 export interface BookCopy {

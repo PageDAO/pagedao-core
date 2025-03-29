@@ -14,7 +14,7 @@
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true
     },
-    "include": ["src/**/*", "runContentTest.js"],
+    "include": ["src/**/*", "runContentTest.js", "testMirrorContract.js"],
     "exclude": ["node_modules", "dist", "**/*.test.ts"]
   }
   

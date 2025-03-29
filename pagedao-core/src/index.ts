@@ -1,5 +1,5 @@
 // $PAGE-related  
-export * from './blockchain/provider';
+export * from './services/blockchain/provider';
 export * from './services/pageToken/priceService';
 export * from './services/pageToken/tvlService';
 export * from './utils/config';

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { getProvider } from '../blockchain/provider';
+import { getProvider } from '../../src/services/blockchain/provider';
 import { 
   ContentTracker, 
   ContentMetadata, 
