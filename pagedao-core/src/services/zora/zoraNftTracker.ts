@@ -13,8 +13,8 @@ export interface ZoraNft {
   description?: string;        // NFT description
   tokenURI?: string;           // Token URI
   imageUrl?: string;           // Image URL
-  maxSupply?: number;          // Maximum supply
-  totalMinted?: number;        // Total minted
+  maxSupply?: string;          // Maximum supply
+  totalMinted?: string;        // Total minted
   royaltyInfo?: {              // Royalty information
     recipient: string;         // Royalty recipient
     bps: number;               // Basis points
@@ -115,8 +115,9 @@ export class ZoraNftTracker {
         title: contractName,
         creator,
         tokenURI: tokenInfo.uri,
-        maxSupply: tokenInfo.maxSupply.toNumber(),
-        totalMinted: tokenInfo.totalMinted.toNumber(),
+        // Fix the overflow by storing as string or using BigInt
+        maxSupply: tokenInfo.maxSupply.toString(), // or use BigInt(tokenInfo.maxSupply.toString())
+        totalMinted: tokenInfo.totalMinted.toString(), // or use BigInt(tokenInfo.totalMinted.toString())
         royaltyInfo: {
           recipient: royaltyInfo.royaltyRecipient,
           bps: royaltyInfo.royaltyBPS,

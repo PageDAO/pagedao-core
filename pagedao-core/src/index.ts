@@ -17,3 +17,7 @@ export * from '../src/services/mirror/mirrorPublicationRegistry';
 export * from '../src/services/zora/zoraNftTracker';
 export * from '../src/services/zora/zoraNftRegistry';
 
+// Readme Books (Polygon)
+export * from '../src/services/readmeBooks/ReadmeBooksTracker';
+export * from '../src/services/readmeBooks/ReadmeBooksRegistry';
+export * from '../src/services/readmeBooks/ReadmeBooksAdapter';

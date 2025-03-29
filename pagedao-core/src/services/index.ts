@@ -1,4 +1,5 @@
 import '../services/mirror/mirrorPublicationAdapter';
+import '../services/readmeBooks/ReadmeBooksAdapter';
 
 
 // Export all content-related interfaces
@@ -14,6 +15,8 @@ export * from '../factory/contentTrackerFactory';
 export * from './alexandriaLabs/AlexandriaBookAdapter';
 export * from './mirror/mirrorPublicationAdapter';
 export * from './zora/zoraNftAdapter';
+export * from './readmeBooks/ReadmeBooksAdapter';
+
 
 /**
  * Initialize all content adapters
