@@ -1,4 +1,5 @@
-// src/services/content/index.ts
+import '../services/mirror/mirrorPublicationAdapter';
+
 
 // Export all content-related interfaces
 export * from '../interfaces/content';

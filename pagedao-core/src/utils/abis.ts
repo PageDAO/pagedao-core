@@ -1,3 +1,5 @@
+import * as mirrorAbiJson from './ContentABIs/mirror.json';
+
 // Uniswap V2 Pair ABI (minimal for getting reserves)
 export const UNISWAP_V2_PAIR_ABI = [
     {
@@ -142,4 +144,6 @@ export const UNISWAP_V2_PAIR_ABI = [
       "type": "function"
     }
   ];
+
+export const MIRROR_ABI = mirrorAbiJson;
   

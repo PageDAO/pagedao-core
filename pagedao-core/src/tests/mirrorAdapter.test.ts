@@ -5,6 +5,8 @@ import { ContentTrackerFactory } from '../factory/contentTrackerFactory';
 
 // Initialize content adapters
 import '../services/index';
+import '../services/mirror/mirrorPublicationAdapter';
+
 
 async function testMirrorContract(): Promise<void> {
   try {
