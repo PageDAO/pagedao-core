@@ -21,3 +21,12 @@ export * from '../src/services/zora/zoraNftRegistry';
 export * from '../src/services/readmeBooks/ReadmeBooksTracker';
 export * from '../src/services/readmeBooks/ReadmeBooksRegistry';
 export * from '../src/services/readmeBooks/ReadmeBooksAdapter';
+
+// Content Interface Layer
+export * from './services/content/factory';
+export * from '../src/services/content/baseContentTracker'
+export * from '../src/interfaces/content';
+export * from '../src/services/alexandriaLabs/AlexandriaBookAdapter';
+export * from '../src/services/mirror/mirrorPublicationAdapter';
+export * from '../src/services/zora/zoraNftAdapter';
+export * from '../src/services/readmeBooks/ReadmeBooksAdapter';
