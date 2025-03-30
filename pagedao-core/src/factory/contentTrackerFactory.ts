@@ -19,7 +19,14 @@ export class ContentTrackerFactory {
     contentType: string,
     implementation: new (contractAddress: string, chain: string, ...args: any[]) => ContentTracker
   ): void {
+    // Check if already registered to avoid duplicates
+    if (this.hasImplementation(contentType)) {
+      console.log(`Implementation for ${contentType} already registered, skipping.`);
+      return;
+    }
+    
     this.implementations[contentType.toLowerCase()] = implementation;
+    console.log(`Registered implementation for content type: ${contentType}`);
   }
   
   /**
@@ -44,11 +51,23 @@ export class ContentTrackerFactory {
       return this.trackers.get(key)!;
     }
     
+    // Check if we need to initialize adapters
+    const registeredTypes = this.getRegisteredTypes();
+    if (registeredTypes.length === 0) {
+      console.log('No adapters registered, initializing...');
+      try {
+        const { initializeContentAdapters } = require('../services/index');
+        initializeContentAdapters();
+      } catch (error) {
+        console.error('Failed to auto-initialize adapters:', error);
+      }
+    }
+    
     // Check if we have a registered implementation for this content type
     const Implementation = this.implementations[normalizedType];
     
     if (!Implementation) {
-      throw new Error(`No implementation registered for content type: ${contentType}`);
+      throw new Error(`No implementation registered for content type: ${contentType} (Available types: ${this.getRegisteredTypes().join(', ')})`);
     }
     
     // Create a new instance with the appropriate implementation

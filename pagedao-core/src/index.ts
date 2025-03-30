@@ -4,29 +4,45 @@ export * from './services/pageToken/priceService';
 export * from './services/pageToken/tvlService';
 export * from './utils/config';
 
+// Import initialization function
+import { initializeContentAdapters } from './services/index';
+
 // NFT Retrieval
 // Alexandria Labs
-export * from '../src/services/alexandriaLabs/AlexandriaBookTracker';
-export * from '../src/services/alexandriaLabs/AlexandriaBookRegistry';
+export * from './services/alexandriaLabs/AlexandriaBookTracker';
+export * from './services/alexandriaLabs/AlexandriaBookRegistry';
 
 // Mirror
-export * from '../src/services/mirror/mirrorPublicationTracker';
-export * from '../src/services/mirror/mirrorPublicationRegistry';
+export * from './services/mirror/mirrorPublicationTracker';
+export * from './services/mirror/mirrorPublicationRegistry';
 
 // Zora
-export * from '../src/services/zora/zoraNftTracker';
-export * from '../src/services/zora/zoraNftRegistry';
+export * from './services/zora/zoraNftTracker';
+export * from './services/zora/zoraNftRegistry';
 
 // Readme Books (Polygon)
-export * from '../src/services/readmeBooks/ReadmeBooksTracker';
-export * from '../src/services/readmeBooks/ReadmeBooksRegistry';
-export * from '../src/services/readmeBooks/ReadmeBooksAdapter';
+export * from './services/readmeBooks/ReadmeBooksTracker';
+export * from './services/readmeBooks/ReadmeBooksRegistry';
+export * from './services/readmeBooks/ReadmeBooksAdapter';
 
 // Content Interface Layer
 export * from './services/content/factory';
-export * from '../src/services/content/baseContentTracker'
-export * from '../src/interfaces/content';
-export * from '../src/services/alexandriaLabs/AlexandriaBookAdapter';
-export * from '../src/services/mirror/mirrorPublicationAdapter';
-export * from '../src/services/zora/zoraNftAdapter';
-export * from '../src/services/readmeBooks/ReadmeBooksAdapter';
+export * from './services/content/baseContentTracker';
+export * from './interfaces/content';
+export * from './services/alexandriaLabs/AlexandriaBookAdapter';
+export * from './services/mirror/mirrorPublicationAdapter';
+export * from './services/zora/zoraNftAdapter';
+export * from './services/readmeBooks/ReadmeBooksAdapter';
+
+// Auto-initialize on import
+try {
+  const registeredTypes = initializeContentAdapters();
+  if (registeredTypes.length > 0) {
+    console.log(`Successfully initialized content adapters: ${registeredTypes.join(', ')}`);
+  }
+} catch (error) {
+  console.warn('Failed to initialize adapters on import:', error);
+}
+
+// Re-export the initialization function to allow manual initialization
+export { initializeContentAdapters };
