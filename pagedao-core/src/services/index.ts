@@ -1,10 +1,8 @@
 // src/services/index.ts
-import { ContentTrackerFactory } from '../services/content/factory';
 
 // Export interfaces and base classes
 export * from '../interfaces/content';
 export * from './content/baseContentTracker';
-export * from './content/factory';
 
 // Export adapters
 export * from './nft/alexandriaLabs/AlexandriaBookAdapter';
