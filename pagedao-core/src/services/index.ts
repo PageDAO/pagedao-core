@@ -7,10 +7,10 @@ export * from './content/baseContentTracker';
 export * from './content/factory';
 
 // Export adapters
-export * from './alexandriaLabs/AlexandriaBookAdapter';
-export * from './mirror/mirrorPublicationAdapter';
-export * from './zora/zoraNftAdapter';
-export * from './readmeBooks/ReadmeBooksAdapter';
+export * from './nft/alexandriaLabs/AlexandriaBookAdapter';
+export * from './nft/mirror/mirrorPublicationAdapter';
+export * from './nft/zora/zoraNftAdapter';
+export * from './nft/readmeBooks/ReadmeBooksAdapter';
 
 /**
  * Initialize all content adapters

@@ -9,30 +9,30 @@ import { initializeContentAdapters } from './services/index';
 
 // NFT Retrieval
 // Alexandria Labs
-export * from './services/alexandriaLabs/AlexandriaBookTracker';
-export * from './services/alexandriaLabs/AlexandriaBookRegistry';
+export * from './services/nft/alexandriaLabs/AlexandriaBookTracker';
+export * from './services/nft/alexandriaLabs/AlexandriaBookRegistry';
 
 // Mirror
-export * from './services/mirror/mirrorPublicationTracker';
-export * from './services/mirror/mirrorPublicationRegistry';
+export * from './services/nft/mirror/mirrorPublicationTracker';
+export * from './services/nft/mirror/mirrorPublicationRegistry';
 
 // Zora
-export * from './services/zora/zoraNftTracker';
-export * from './services/zora/zoraNftRegistry';
+export * from './services/nft/zora/zoraNftTracker';
+export * from './services/nft/zora/zoraNftRegistry';
 
 // Readme Books (Polygon)
-export * from './services/readmeBooks/ReadmeBooksTracker';
-export * from './services/readmeBooks/ReadmeBooksRegistry';
-export * from './services/readmeBooks/ReadmeBooksAdapter';
+export * from './services/nft/readmeBooks/ReadmeBooksTracker';
+export * from './services/nft/readmeBooks/ReadmeBooksRegistry';
+export * from './services/nft/readmeBooks/ReadmeBooksAdapter';
 
 // Content Interface Layer
 export * from './services/content/factory';
 export * from './services/content/baseContentTracker';
 export * from './interfaces/content';
-export * from './services/alexandriaLabs/AlexandriaBookAdapter';
-export * from './services/mirror/mirrorPublicationAdapter';
-export * from './services/zora/zoraNftAdapter';
-export * from './services/readmeBooks/ReadmeBooksAdapter';
+export * from './services/nft/alexandriaLabs/AlexandriaBookAdapter';
+export * from './services/nft/mirror/mirrorPublicationAdapter';
+export * from './services/nft/zora/zoraNftAdapter';
+export * from './services/nft/readmeBooks/ReadmeBooksAdapter';
 
 // Import the new helper functions from our factory
 import { 
