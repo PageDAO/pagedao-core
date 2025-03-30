@@ -8,7 +8,7 @@ import {
   CollectionInfo
 } from '../../interfaces/content';
 import { ZoraNftTracker, ZoraNft } from '../../services/zora/zoraNftTracker';
-import { ContentTrackerFactory } from '../../factory/contentTrackerFactory';
+import { ContentTrackerFactory } from '../../services/content/factory';
 
 /**
  * Options for Zora NFT adapter
@@ -215,5 +215,5 @@ export class ZoraNftAdapter extends BaseContentTracker {
 }
 
 // Register this implementation with the factory
-ContentTrackerFactory.registerImplementation('zora_nft', ZoraNftAdapter);
-ContentTrackerFactory.registerImplementation('nft', ZoraNftAdapter); // Register as generic 'nft' type too
+ContentTrackerFactory.getInstance().registerImplementation('zora_nft', ZoraNftAdapter);
+ContentTrackerFactory.getInstance().registerImplementation('nft', ZoraNftAdapter); // Register as generic 'nft' type too

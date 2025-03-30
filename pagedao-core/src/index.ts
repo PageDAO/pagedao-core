@@ -34,11 +34,26 @@ export * from './services/mirror/mirrorPublicationAdapter';
 export * from './services/zora/zoraNftAdapter';
 export * from './services/readmeBooks/ReadmeBooksAdapter';
 
-// Auto-initialize on import
+// Import the new helper functions from our factory
+import { 
+  ensureFactoryInitialized, 
+  getFactoryStatus 
+} from './services/content/factory';
+
+// Modified auto-initialization with better error handling and diagnostics
 try {
-  const registeredTypes = initializeContentAdapters();
-  if (registeredTypes.length > 0) {
-    console.log(`Successfully initialized content adapters: ${registeredTypes.join(', ')}`);
+  // Use the ensure method which is more robust in serverless environments
+  const initialized = ensureFactoryInitialized();
+  
+  if (initialized) {
+    const status = getFactoryStatus();
+    console.log(`Content factory initialized successfully. Registered types: ${status.registeredTypes.join(', ')}`);
+  } else {
+    // Fall back to the original initialization if our singleton approach fails
+    const registeredTypes = initializeContentAdapters();
+    if (registeredTypes.length > 0) {
+      console.log(`Successfully initialized content adapters: ${registeredTypes.join(', ')}`);
+    }
   }
 } catch (error) {
   console.warn('Failed to initialize adapters on import:', error);
@@ -46,3 +61,10 @@ try {
 
 // Re-export the initialization function to allow manual initialization
 export { initializeContentAdapters };
+
+// Export the new factory helper functions
+export {
+  getFactoryStatus,
+  ensureFactoryInitialized,
+  reinitializeFactory
+} from './services/content/factory';

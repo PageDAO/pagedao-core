@@ -8,7 +8,7 @@ import {
   CollectionInfo
 } from '../../interfaces/content';
 import { MirrorPublicationTracker, MirrorPublication } from './mirrorPublicationTracker';
-import { ContentTrackerFactory } from '../../factory/contentTrackerFactory';
+import { ContentTrackerFactory } from '../../services/content/factory';
 
 /**
  * Adapter for Mirror Publications to standardized content interface
@@ -350,6 +350,5 @@ export class MirrorPublicationAdapter extends BaseContentTracker {
 }
 
 // Register this implementation with the factory
-ContentTrackerFactory.registerImplementation('mirror_publication', MirrorPublicationAdapter);
-ContentTrackerFactory.registerImplementation('publication', MirrorPublicationAdapter);
-
+ContentTrackerFactory.getInstance().registerImplementation('mirror_publication', MirrorPublicationAdapter);
+ContentTrackerFactory.getInstance().registerImplementation('publication', MirrorPublicationAdapter);

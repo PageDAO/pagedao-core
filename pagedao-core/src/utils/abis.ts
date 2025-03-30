@@ -1,5 +1,6 @@
 import * as mirrorAbiJson from './ContentABIs/mirror.json';
 import * as readmeBooksAbiJson from './ContentABIs/readmeBooks.json';
+import * as zoraAbiJson from './ContentABIs/zora.json';
 
 // Uniswap V2 Pair ABI (minimal for getting reserves)
 export const UNISWAP_V2_PAIR_ABI = [
@@ -148,5 +149,6 @@ export const UNISWAP_V2_PAIR_ABI = [
 
 export const MIRROR_ABI = mirrorAbiJson;
 export const README_BOOKS_ABI = readmeBooksAbiJson;
+export const ZORA_ABI = zoraAbiJson;
 
   

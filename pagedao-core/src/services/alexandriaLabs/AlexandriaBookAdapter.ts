@@ -8,7 +8,7 @@ import {
   CollectionInfo
 } from '../../interfaces/content';
 import { AlexandriaBookTracker, BookCopy, BookCollection } from '../../services/alexandriaLabs/AlexandriaBookTracker';
-import { ContentTrackerFactory } from '../../factory/contentTrackerFactory';
+import { ContentTrackerFactory } from '../../services/content/factory';
 
 /**
  * Adapter for Alexandria Books to standardized content interface
@@ -185,5 +185,5 @@ export class AlexandriaBookAdapter extends BaseContentTracker {
 }
 
 // Register this implementation with the factory
-ContentTrackerFactory.registerImplementation('alexandria_book', AlexandriaBookAdapter);
-ContentTrackerFactory.registerImplementation('book', AlexandriaBookAdapter); // Register as generic 'book' type too
+ContentTrackerFactory.getInstance().registerImplementation('alexandria_book', AlexandriaBookAdapter);
+ContentTrackerFactory.getInstance().registerImplementation('book', AlexandriaBookAdapter);

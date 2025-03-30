@@ -7,7 +7,7 @@ import {
   CollectionInfo
 } from '../../interfaces/content';
 import { ReadmeBooksTracker, ReadmeBookCollection } from './ReadmeBooksTracker';
-import { ContentTrackerFactory } from '../../factory/contentTrackerFactory';
+import { ContentTrackerFactory } from '../../services/content/factory';
 
 /**
  * Adapter for Readme Books to standardized content interface
@@ -189,5 +189,5 @@ export class ReadmeBooksAdapter extends BaseContentTracker {
 }
 
 // Register this implementation with the factory
-ContentTrackerFactory.registerImplementation('readme_book', ReadmeBooksAdapter);
-ContentTrackerFactory.registerImplementation('polygon_book', ReadmeBooksAdapter); // Register as alternative type
+ContentTrackerFactory.getInstance().registerImplementation('readme_book', ReadmeBooksAdapter);
+ContentTrackerFactory.getInstance().registerImplementation('polygon_book', ReadmeBooksAdapter); // Register as alternative type
