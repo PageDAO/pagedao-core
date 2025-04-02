@@ -95,7 +95,7 @@ export const RPC_URLS: { [key: string]: string } = {
   optimism: process.env.OPTIMISM_RPC_URL || 'https://mainnet.optimism.io',
   base: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
   zora: process.env.ZORA_RPC_URL || 'https://rpc.zora.energy',
-  polygon: process.env.POLYGON_RPC_URL || 'https://polygon-rpc.com',
+  polygon: process.env.POLYGON_RPC_URL || 'https://polygon.drpc.com',
   osmosis: process.env.OSMOSIS_PRIMARY_RPC || 'https://api.kyve.network/osmosis'
 };
 
