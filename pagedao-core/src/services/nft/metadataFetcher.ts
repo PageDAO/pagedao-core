@@ -2,8 +2,29 @@
 
 import { ethers } from 'ethers';
 import { getProvider } from '../blockchain/provider';
-import { MIRROR_ABI, README_BOOKS_ABI, ZORA_ABI } from '../../utils/abis';
+import { MIRROR_ABI, README_BOOKS_ABI, ZORA_ABI, ALEXANDRIA_ABI } from '../../utils/abis';
 
+/**
+ * Ensure ABI is in the correct array format for ethers.js
+ */
+function ensureAbiArray(abiValue: any): any[] {
+  if (!abiValue) return [];
+  if (Array.isArray(abiValue)) return abiValue;
+  if (abiValue.default && Array.isArray(abiValue.default)) return abiValue.default;
+  if (typeof abiValue === 'object') {
+    const values = Object.values(abiValue);
+    if (values.length > 0 && Array.isArray(values[0])) return values[0];
+    return values;
+  }
+  if (typeof abiValue === 'string') {
+    try { return JSON.parse(abiValue); } 
+    catch (e) { return []; }
+  }
+  console.warn('Unknown ABI format, returning empty array');
+  return [];
+}
+
+console.log("USING LOCAL VERSION OF PAGEDAO-CORE");
 /**
  * NFTMetadata interface - represents standardized metadata for all NFT types
  */
@@ -33,7 +54,7 @@ export interface NFTMetadata {
  */
 const ABI_MAP: Record<string, any> = {
   'book': README_BOOKS_ABI,
-  'alexandria_book': README_BOOKS_ABI,
+  'alexandria_book': ALEXANDRIA_ABI,
   'publication': MIRROR_ABI,
   'mirror_publication': MIRROR_ABI,
   'nft': ZORA_ABI,
@@ -82,13 +103,15 @@ export async function fetchNFTMetadata(
   if (!abi) {
     throw new Error(`Unsupported asset type: ${assetType}`);
   }
-  
+
   // Get provider
   const provider = await getProvider(chain);
   
-  // Create contract instance
-  const contract = new ethers.Contract(contractAddress, abi, provider);
-  
+  // Create contract instance with properly formatted ABI
+  console.log("Original ABI type:", typeof abi, Array.isArray(abi));
+  const abiArray = ensureAbiArray(abi);
+  console.log("Processed ABI type:", typeof abiArray, Array.isArray(abiArray));
+  const contract = new ethers.Contract(contractAddress, abiArray, provider);  
   // Fetch base metadata - common for all types
   const baseMetadata: NFTMetadata = {
     id: `${contractAddress}-${tokenId}`,
@@ -446,13 +469,22 @@ async function fetchBookMetadata(
   tokenId: string
 ): Promise<NFTMetadata> {
   try {
-    // Fetch basic token information
-    const [
-      uri,
-      name,
-      symbol
-    ] = await Promise.all([
-      contract.uri(tokenId),
+    // Fetch basic token information - use tokenURI instead of uri for Alexandria
+    let uri;
+    try {
+      // First try uri (ERC1155 style)
+      uri = await contract.uri(tokenId);
+    } catch (e) {
+      // If that fails, try tokenURI (ERC721 style)
+      try {
+        uri = await contract.tokenURI(tokenId);
+      } catch (e2) {
+        // If both fail, default to empty string
+        uri = '';
+      }
+    }
+
+    const [name, symbol] = await Promise.all([
       contract.name(),
       contract.symbol()
     ]);
