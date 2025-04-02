@@ -95,7 +95,7 @@ export const RPC_URLS: { [key: string]: string } = {
   optimism: process.env.OPTIMISM_RPC_URL || 'https://mainnet.optimism.io',
   base: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
   zora: process.env.ZORA_RPC_URL || 'https://rpc.zora.energy',
-  polygon: process.env.POLYGON_RPC_URL || 'https://polygon.drpc.com',
+  polygon: process.env.POLYGON_RPC_URL || 'https://rpc.ankr.com/polygon',
   osmosis: process.env.OSMOSIS_PRIMARY_RPC || 'https://api.kyve.network/osmosis'
 };
 
@@ -105,7 +105,7 @@ export const BACKUP_RPC_URLS: { [key: string]: string } = {
   optimism: process.env.OPTIMISM_BACKUP_RPC_URL || 'https://optimism.llamarpc.com',
   base: process.env.BASE_BACKUP_RPC_URL || 'https://base.publicnode.com',
   zora: process.env.ZORA_BACKUP_RPC_URL || 'https://rpc.ankr.com/zora',
-  polygon: process.env.POLYGON_BACKUP_RPC_URL || 'https://polygon.llamarpc.com',
+  polygon: process.env.POLYGON_BACKUP_RPC_URL || 'https://rpc.polygon.gateway.pokt.network',
   osmosis: process.env.OSMOSIS_BACKUP_RPC || 'https://lcd.osmosis.zone'
 };
   
